@@ -7,7 +7,7 @@ import tkinter as tk
 from random import choice, choices
 from tkinter.ttk import Style
 
-from lib.objects import Bowman, Color, Horseman, Image, King, Swordsman
+from lib.objects import Bowman, Color, EndTurn, Horseman, Image, King, Restart, Swordsman
 
 
 class Program:
@@ -31,6 +31,9 @@ class Program:
             highlightthickness=0,
         )
         self._canvas.pack()
+
+        self._end_turn_button = EndTurn(self._canvas, 5, -6)
+        self._restart_button = Restart(self._canvas, -5, -6, window=self._window)
 
         Image.initialize()
         self._create_landscape()

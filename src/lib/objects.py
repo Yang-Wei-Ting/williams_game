@@ -1,9 +1,14 @@
 import glob
 import itertools
 import math
+import os
+import sys
 import tkinter as tk
 from abc import ABC, abstractmethod
 from pathlib import PurePath
+from random import choice
+from subprocess import Popen
+from tkinter import font
 from tkinter.ttk import Progressbar
 
 
@@ -96,6 +101,173 @@ class GameObject(ABC):
         Return the distance between self and other.
         """
         return math.dist((self.x, self.y), (other.x, other.y))
+
+
+class Control(GameObject, tk.Button):
+    """
+    An abstract base class for all control button objects.
+    """
+
+    def _set_widget_config(self) -> None:
+        """
+        Configure widget.
+        """
+        self._widget_config = {
+            "foreground": "Black",
+            "activeforeground": "Black",
+            "background": "Burlywood4",
+            "activebackground": "Burlywood4",
+            "font": font.Font(family="Helvetica", size=10, weight=font.BOLD),
+            "relief": tk.RAISED,
+            "borderwidth": 3,
+            "cursor": "hand2",
+            "highlightcolor": "Burlywood4",
+            "highlightthickness": 0,
+            "command": self.handle_click_event,
+        }
+
+    @abstractmethod
+    def handle_click_event(self) -> None:
+        """
+        Handle control button click events.
+        """
+
+
+class EndTurn(Control):
+    """
+    A class that instantiates end turn buttons which upon clicked, end player's
+    turn then execute computer's turn.
+    """
+
+    def __init__(
+        self,
+        canvas: tk.Canvas,
+        x: int,
+        y: int,
+    ):
+        """
+        Create widget and canvas window object.
+        """
+        self._wave = self._create_enemies()
+        super().__init__(canvas, x, y)
+
+    def _set_widget_config(self) -> None:
+        """
+        Configure widget.
+        """
+        super()._set_widget_config()
+        self._widget_config["text"] = "End Turn"
+
+    def handle_click_event(self) -> None:
+        """
+        If an ally instance is chosen, unselect it first.
+        If the targeted ally instance is out of an enemy instance's attack range,
+        move the enemy instance toward the targeted ally instance.
+        If any ally instance lies within the enemy instance's attack range, make
+        the enemy instance attack the ally instance.
+        If there's no enemy instance, heal all ally instances then create enemy instances.
+        """
+        if Soldier.chosen_ally:
+            Soldier.chosen_ally.handle_click_event()
+
+        if Soldier.enemies:
+            for enemy in Soldier.enemies:
+                if Soldier.allies:
+                    enemy.move_toward(Soldier.allies[0])
+                    enemy.attack_surrounding()
+        else:
+            for ally in Soldier.allies:
+                ally.heal_itself(40)
+            next(self._wave)
+
+        for soldier in itertools.chain(Soldier.allies, Soldier.enemies):
+            soldier.promote()
+            soldier.moved_this_turn = False
+            soldier.attacked_this_turn = False
+            soldier.set_active()
+
+    def _create_enemies(self):
+        """
+        Create enemy instances.
+        """
+        for x in range(-1, 2):
+            Bowman(self._canvas, x, 6)
+        yield
+
+        for x in range(-2, 3):
+            Horseman(self._canvas, x, 6)
+        yield
+
+        for x in range(-3, 4):
+            Swordsman(self._canvas, x, 6)
+        yield
+
+        for x in range(-5, 6):
+            choice([Bowman, Horseman, Swordsman])(self._canvas, x, 6)
+        yield
+
+        for x in range(-5, 6):
+            choice([Bowman, Horseman, Swordsman])(self._canvas, x, 6)
+        for x in range(-2, 3):
+            choice([Bowman, Horseman, Swordsman])(self._canvas, x, 5)
+        yield
+
+        for x in range(-3, 4):
+            Bowman(self._canvas, x, 6)
+            Swordsman(self._canvas, x, 5)
+        for x in (-5, -4, 4, 5):
+            for y in (5, 6):
+                Horseman(self._canvas, x, y)
+        yield
+
+        for x in range(-3, 4):
+            for y in (5, 6):
+                Bowman(self._canvas, x, y)
+        for x in (-5, -4, 4, 5):
+            for y in range(4, 7):
+                Horseman(self._canvas, x, y)
+        for x in (-3, -2, -1, 1, 2, 3):
+            Swordsman(self._canvas, x, 4)
+        King(self._canvas, 0, 4)
+        yield
+
+
+class Restart(Control):
+    """
+    A class that instantiates restart buttons which upon clicked, restart the game.
+    """
+
+    def __init__(
+        self,
+        canvas: tk.Canvas,
+        x: int,
+        y: int,
+        *,
+        window: tk.Tk,
+    ):
+        """
+        Create widget and canvas window object.
+        """
+        self._window = window
+        super().__init__(canvas, x, y)
+
+    def _set_widget_config(self) -> None:
+        """
+        Configure widget.
+        """
+        super()._set_widget_config()
+        self._widget_config["text"] = "Restart"
+
+    def handle_click_event(self) -> None:
+        """
+        Restart the game.
+        """
+        self._window.destroy()
+
+        with Popen([sys.executable, os.path.realpath(sys.argv[0])]) as proc:
+            proc.communicate()
+
+        sys.exit(0)
 
 
 class Soldier(GameObject, tk.Button):
