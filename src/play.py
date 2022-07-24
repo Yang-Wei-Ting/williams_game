@@ -5,8 +5,9 @@
 
 import tkinter as tk
 from random import choice, choices
+from tkinter.ttk import Style
 
-from lib.objects import Image
+from lib.objects import Bowman, Color, Horseman, Image, King, Swordsman
 
 
 class Program:
@@ -33,6 +34,19 @@ class Program:
 
         Image.initialize()
         self._create_landscape()
+
+        self._style = Style()
+        self._style.theme_use("default")
+        self._style.configure(
+            "TProgressbar",
+            troughcolor="Red",
+            background="Green",
+            darkcolor="Green",
+            lightcolor="Green",
+            bordercolor="Red",
+            thickness=5,
+        )
+        self._create_initial_allies()
 
         self._window.mainloop()
 
@@ -63,6 +77,18 @@ class Program:
         create(750, 30, image=Image.water_e)
         create(30, 750, image=Image.water_sw)
         create(750, 750, image=Image.water_se)
+
+    def _create_initial_allies(self) -> None:
+        """
+        Create initial ally instances.
+        """
+        King(self._canvas, 0, -5, color=Color.BLUE)
+        for coordinate in ((-1, -4), (0, -4), (1, -4)):
+            Bowman(self._canvas, *coordinate, color=Color.BLUE)
+        for coordinate in ((-3, -3), (-2, -3), (2, -3), (3, -3)):
+            Horseman(self._canvas, *coordinate, color=Color.BLUE)
+        for coordinate in ((-1, -3), (0, -3), (1, -3)):
+            Swordsman(self._canvas, *coordinate, color=Color.BLUE)
 
 
 if __name__ == "__main__":
