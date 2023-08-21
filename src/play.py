@@ -15,7 +15,7 @@ class Program:
     The main program.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the main program.
         """

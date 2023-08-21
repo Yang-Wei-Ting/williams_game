@@ -1,13 +1,12 @@
 import itertools
 import math
-import os
+import subprocess
 import sys
 import tkinter as tk
 from abc import ABC, abstractmethod
 from glob import glob
 from pathlib import PurePath
 from random import choice
-from subprocess import Popen
 from tkinter.ttk import Progressbar
 
 
@@ -36,12 +35,12 @@ class Image:
             setattr(cls, PurePath(path).stem, tk.PhotoImage(file=path))
 
 
-class GameObject(ABC):
+class GameObject(tk.Button, ABC):
     """
     An abstract base class for all game objects.
     """
 
-    def __init__(self, canvas: tk.Canvas, x: int, y: int):
+    def __init__(self, canvas: tk.Canvas, x: int, y: int) -> None:
         """
         Create widget and canvas window object.
         """
@@ -56,14 +55,14 @@ class GameObject(ABC):
         """
         Create widget.
         """
-        super(ABC, self).__init__(self._canvas)
+        super().__init__(self._canvas)
 
     @abstractmethod
     def _configure_widget(self) -> None:
         """
         Configure widget.
         """
-        self.configure()
+        raise NotImplementedError
 
     def _create_canvas_window_object(self) -> None:
         """
@@ -98,7 +97,7 @@ class GameObject(ABC):
         return math.dist((self.x, self.y), (other.x, other.y))
 
 
-class Control(GameObject, tk.Button):
+class Control(GameObject):
     """
     An abstract base class for all control button objects.
     """
@@ -122,6 +121,7 @@ class Control(GameObject, tk.Button):
         """
         Handle control button's click events.
         """
+        raise NotImplementedError
 
 
 class Popup(Control):
@@ -132,7 +132,7 @@ class Popup(Control):
 
     instance = None
 
-    def __init__(self, canvas: tk.Canvas, x: int, y: int):
+    def __init__(self, canvas: tk.Canvas, x: int, y: int) -> None:
         """
         """
         if Popup.instance:
@@ -155,7 +155,7 @@ class EndTurn(Control):
     turn then execute computer's turn.
     """
 
-    def __init__(self, canvas: tk.Canvas, x: int, y: int):
+    def __init__(self, canvas: tk.Canvas, x: int, y: int) -> None:
         """
         Create widget and canvas window object.
         """
@@ -282,7 +282,7 @@ class Restart(Control):
     A class that instantiates restart buttons which upon clicked, restart the game.
     """
 
-    def __init__(self, canvas: tk.Canvas, x: int, y: int, *, window: tk.Tk):
+    def __init__(self, canvas: tk.Canvas, x: int, y: int, *, window: tk.Tk) -> None:
         """
         Create widget and canvas window object.
         """
@@ -302,13 +302,11 @@ class Restart(Control):
         """
         self._window.destroy()
 
-        with Popen([sys.executable, os.path.realpath(sys.argv[0])]) as proc:
-            proc.communicate()
-
-        sys.exit(0)
+        proc = subprocess.run([sys.executable, sys.argv[0]])
+        sys.exit(proc.returncode)
 
 
-class Soldier(GameObject, tk.Button):
+class Soldier(GameObject):
     """
     An abstract base class for all soldier game objects.
     This class keeps tracks of all its derived class instances and their coordinates.
@@ -329,7 +327,7 @@ class Soldier(GameObject, tk.Button):
     experience = 0
     PROMOTION_EXPERIENCE = {1: 4, 2: 8, 3: 16, 4: 32, 5: math.inf}
 
-    def __init__(self, canvas: tk.Canvas, x: int, y: int, *, color: str = Color.RED):
+    def __init__(self, canvas: tk.Canvas, x: int, y: int, *, color: str = Color.RED) -> None:
         """
         Create widget and canvas window object.
         """
@@ -636,7 +634,7 @@ class Swordsman(Soldier):
     defense = 20
 
 
-class Movement(GameObject, tk.Button):
+class Movement(GameObject):
     """
     A class that instantiates movements.
     When a movement is clicked on, the chosen ally instance moves to its coordinate.
@@ -690,7 +688,7 @@ class AttackRange(GameObject):
 
     instance = None
 
-    def __init__(self, canvas: tk.Canvas, x: int, y: int, *, radius: int):
+    def __init__(self, canvas: tk.Canvas, x: int, y: int, *, radius: int) -> None:
         """
         Create canvas window object.
         """
