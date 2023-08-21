@@ -32,7 +32,7 @@ class Image:
         """
         Hook all images onto cls.
         """
-        for path in glob("images/*"):
+        for path in glob("../images/*"):
             setattr(cls, PurePath(path).stem, tk.PhotoImage(file=path))
 
 
