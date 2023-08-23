@@ -6,6 +6,6 @@ Require Python version >= 3.10
 
 <p><pre>
 $ git clone https://github.com/Yang-Wei-Ting/williams_game.git
-$ cd williams_game/src/
-$ python3 play.py
+$ cd williams_game/
+$ python src/play.py
 </pre></p>

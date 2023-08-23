@@ -7,7 +7,9 @@ import tkinter as tk
 from random import choice, choices
 from tkinter.ttk import Style
 
-from lib.objects import Bowman, Color, EndTurn, Horseman, Image, King, Restart, Swordsman
+from game.controls import EndTurn, Restart
+from game.cores import Bowman, Horseman, King, Swordsman
+from game.miscs import Color, Image
 
 
 class Program:
