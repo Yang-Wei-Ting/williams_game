@@ -116,10 +116,7 @@ class EndTurn(Control):
                     if enemy.attacked_this_turn:
                         enemy.promote()
                     else:
-                        x, y = enemy.x, enemy.y
                         enemy.move_toward(Soldier.allies[0])
-                        if enemy.x == x and enemy.y == y:
-                            enemy.wobble()
 
                         enemy.attack_surrounding()
                         if enemy.attacked_this_turn:

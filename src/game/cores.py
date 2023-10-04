@@ -1,7 +1,6 @@
 import itertools
 import math
 import tkinter as tk
-from random import choice
 from tkinter.ttk import Progressbar
 
 from game.bases import GameObject
@@ -135,19 +134,6 @@ class Soldier(GameObject):
         )
         if tile := next(tiles, None):
             self.move_to(*tile)
-
-    def wobble(self) -> None:
-        """
-        Move self randomly.
-        """
-        if tiles := [
-            (x, y)
-            for x, y in itertools.product(
-                range(self.x - 1, self.x + 2), range(self.y - 1, self.y + 2)
-            )
-            if (x, y) not in Soldier.coordinates and -5 <= x <= 5 and -5 <= y <= 5
-        ]:
-            self.move_to(*choice(tiles))
 
     def assault(self, other) -> None:
         """
