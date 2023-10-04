@@ -139,8 +139,6 @@ class Soldier(GameObject):
         """
         Make self attack other.
         """
-        self.handle_click_event()
-
         match self.__class__.__name__[0], other.__class__.__name__[0]:
             case ("K", _) | ("B", "S") | ("H", "B") | ("S", "H"):
                 multiplier = 2
@@ -283,6 +281,7 @@ class Soldier(GameObject):
             and not chosen_ally.attacked_this_turn
             and chosen_ally.get_distance_between(self) <= chosen_ally.attack_range
         ):
+            chosen_ally.handle_click_event()
             chosen_ally.assault(self)
             chosen_ally.promote()
 
