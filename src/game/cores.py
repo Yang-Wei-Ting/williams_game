@@ -123,14 +123,18 @@ class Soldier(GameObject):
         Move self toward other.
         """
         distance = self.get_distance_between(other)
-        if distance > self.attack_range:
-            dx = int(self.mobility * (other.x - self.x) / distance)
-            dy = int(self.mobility * (other.y - self.y) / distance)
-            for x in range(self.x + dx * (dx > 0), self.x + dx * (dx < 0) - 1, -1):
-                for y in range(self.y + dy * (dy > 0), self.y + dy * (dy < 0) - 1, -1):
-                    if (x, y) not in Soldier.coordinates and -5 <= x <= 5 and -5 <= y <= 6:
-                        self.move_to(x, y)
-                        break
+        mx = int(self.mobility * (other.x - self.x) / distance)
+        my = int(self.mobility * (other.y - self.y) / distance)
+        tiles = (
+            (x, y)
+            for x, y in itertools.product(
+                range(self.x + mx * (mx > 0), self.x + mx * (mx < 0) - 1, -1),
+                range(self.y + my * (my > 0), self.y + my * (my < 0) - 1, -1),
+            )
+            if (x, y) not in Soldier.coordinates and -5 <= x <= 5 and -5 <= y <= 6
+        )
+        if tile := next(tiles, None):
+            self.move_to(*tile)
 
     def wobble(self) -> None:
         """
