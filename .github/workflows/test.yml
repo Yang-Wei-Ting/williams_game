@@ -1,0 +1,34 @@
+name: Test Workflow
+
+on: [ push, pull_request ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get --quiet update
+          sudo apt-get --quiet --yes install xvfb
+          pip install --upgrade pip
+          pip install coverage flake8 isort
+
+      - name: Run linters
+        run: |
+          flake8 --version
+          flake8 --max-line-length 120 --max-doc-length 120 --exit-zero .
+          isort --version-number
+          isort --diff --line-length 120 .
+
+      - name: Run tests
+        run: |
+          Xvfb :1 -screen 0 1600x1200x24 &
+          find tests -name 'test_*.py' -exec sh -c \
+            'DISPLAY=:1.0 PYTHONPATH="sources:tests" coverage run --append --branch "{}"' \;
+          coverage report --omit='tests/**/test_*.py' --show-missing
