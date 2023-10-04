@@ -38,8 +38,8 @@ class Control(GameObject):
 
 class Popup(Control):
     """
-    A class that instantiates popup button objects.
-    Only one popup button object can exist at a given time.
+    A class that instantiates pop-up button objects.
+    Only one pop-up button object can exist at a given time.
     """
 
     instance = None
@@ -55,7 +55,7 @@ class Popup(Control):
 
     def handle_click_event(self) -> None:
         """
-        Handle popup button's click events.
+        Handle pop-up button's click events.
         """
         self.remove_canvas_window_object()
         Popup.instance = None

@@ -309,7 +309,7 @@ class King(Soldier):
 
 class Bowman(Soldier):
     """
-    Soldier with high attack range but low attak and low health.
+    Soldier with high attack range but low attack and low health.
     Counter swordsmen, countered by horsemen.
     """
 
