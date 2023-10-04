@@ -1,6 +1,7 @@
 import itertools
 import math
 import tkinter as tk
+from abc import abstractmethod
 from tkinter.ttk import Progressbar
 
 from game.bases import GameObject
@@ -27,6 +28,11 @@ class Soldier(GameObject):
     level = 1
     experience = 0
     PROMOTION_EXPERIENCE = {1: 4, 2: 8, 3: 16, 4: 32, 5: math.inf}
+
+    @property
+    @abstractmethod
+    def counters(self):
+        raise NotImplementedError
 
     def __init__(self, canvas: tk.Canvas, x: int, y: int, *, color: str = Color.RED) -> None:
         """
@@ -139,12 +145,7 @@ class Soldier(GameObject):
         """
         Make self attack other.
         """
-        match self.__class__.__name__[0], other.__class__.__name__[0]:
-            case ("K", _) | ("B", "S") | ("H", "B") | ("S", "H"):
-                multiplier = 2
-            case _:
-                multiplier = 1
-
+        multiplier = 1 + (type(other) in self.counters)
         other.health -= max(self.attack * multiplier - other.defense, 0)
         self.experience += multiplier
         if other.health > 0:
@@ -295,6 +296,10 @@ class King(Soldier):
     health = 150
     mobility = 3
 
+    @property
+    def counters(self):
+        return {King, Bowman, Horseman, Swordsman}
+
 
 class Bowman(Soldier):
     """
@@ -306,6 +311,10 @@ class Bowman(Soldier):
     attack_range = 3
     health = 50
 
+    @property
+    def counters(self):
+        return {Swordsman}
+
 
 class Horseman(Soldier):
     """
@@ -315,6 +324,10 @@ class Horseman(Soldier):
 
     mobility = 3
 
+    @property
+    def counters(self):
+        return {Bowman}
+
 
 class Swordsman(Soldier):
     """
@@ -323,6 +336,10 @@ class Swordsman(Soldier):
     """
 
     defense = 20
+
+    @property
+    def counters(self):
+        return {Horseman}
 
 
 class Movement(GameObject):
