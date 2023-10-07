@@ -5,7 +5,7 @@ from abc import abstractmethod
 from random import choice, sample
 
 from game.bases import GameObject
-from game.cores import Bowman, Horseman, King, Soldier, Swordsman
+from game.cores import Archer, Cavalry, Infantry, King, Soldier
 from game.miscs import Image
 
 
@@ -148,49 +148,49 @@ class EndTurn(Control):
         """
         # Wave 1
         for x in range(-1, 2):
-            Bowman(self._canvas, x, 6)
+            Archer(self._canvas, x, 6)
         yield
 
         # Wave 2
         for x in range(-2, 3):
-            Horseman(self._canvas, x, 6)
+            Cavalry(self._canvas, x, 6)
         yield
 
         # Wave 3
         for x in range(-3, 4):
-            Swordsman(self._canvas, x, 6)
+            Infantry(self._canvas, x, 6)
         yield
 
         # Wave 4
         for x in range(-5, 6):
-            choice([Bowman, Horseman, Swordsman])(self._canvas, x, 6).promote(4)
+            choice([Archer, Cavalry, Infantry])(self._canvas, x, 6).promote(4)
         yield
 
         # Wave 5
         for x in range(-5, 6):
-            choice([Bowman, Horseman, Swordsman])(self._canvas, x, 6).promote(4)
+            choice([Archer, Cavalry, Infantry])(self._canvas, x, 6).promote(4)
         for x in range(-2, 3):
-            choice([Bowman, Horseman, Swordsman])(self._canvas, x, 5).promote(4)
+            choice([Archer, Cavalry, Infantry])(self._canvas, x, 5).promote(4)
         yield
 
         # Wave 6
         for x in range(-3, 4):
-            Bowman(self._canvas, x, 6)
-            Swordsman(self._canvas, x, 5).promote(12)
+            Archer(self._canvas, x, 6)
+            Infantry(self._canvas, x, 5).promote(12)
         for x in (-5, -4, 4, 5):
             for y in (5, 6):
-                Horseman(self._canvas, x, y).promote(12)
+                Cavalry(self._canvas, x, y).promote(12)
         yield
 
         # Wave 7
         for x in range(-3, 4):
             for y in (5, 6):
-                Bowman(self._canvas, x, y)
+                Archer(self._canvas, x, y)
         for x in (-5, -4, 4, 5):
             for y in range(4, 7):
-                Horseman(self._canvas, x, y).promote(12)
+                Cavalry(self._canvas, x, y).promote(12)
         for x in (-3, -2, -1, 1, 2, 3):
-            Swordsman(self._canvas, x, 4).promote(12)
+            Infantry(self._canvas, x, 4).promote(12)
         King(self._canvas, 0, 4).promote(60)
         yield
 

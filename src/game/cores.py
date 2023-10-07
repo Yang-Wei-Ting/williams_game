@@ -352,13 +352,13 @@ class King(Soldier):
 
     @property
     def counters(self):
-        return {King, Bowman, Horseman, Swordsman}
+        return {King, Archer, Cavalry, Infantry}
 
 
-class Bowman(Soldier):
+class Archer(Soldier):
     """
     Soldier with high attack range but low attack and low health.
-    Counter swordsmen, countered by horsemen.
+    Counter infantries, countered by cavalries.
     """
 
     attack = 25
@@ -367,33 +367,33 @@ class Bowman(Soldier):
 
     @property
     def counters(self):
-        return {Swordsman}
+        return {Infantry}
 
 
-class Horseman(Soldier):
+class Cavalry(Soldier):
     """
     Soldier with high mobility.
-    Counter bowmen, countered by swordsmen.
+    Counter archers, countered by infantries.
     """
 
     mobility = 3
 
     @property
     def counters(self):
-        return {Bowman}
+        return {Archer}
 
 
-class Swordsman(Soldier):
+class Infantry(Soldier):
     """
     Soldier with high defense.
-    Counter horsemen, countered by bowmen.
+    Counter cavalries, countered by archers.
     """
 
     defense = 20
 
     @property
     def counters(self):
-        return {Horseman}
+        return {Cavalry}
 
 
 class Movement(GameObject):
