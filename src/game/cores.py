@@ -1,7 +1,6 @@
 import itertools
 import math
 import tkinter as tk
-from random import choice
 from tkinter.ttk import Progressbar
 
 from game.bases import GameObject
@@ -123,27 +122,18 @@ class Soldier(GameObject):
         Move self toward other.
         """
         distance = self.get_distance_between(other)
-        if distance > self.attack_range:
-            dx = int(self.mobility * (other.x - self.x) / distance)
-            dy = int(self.mobility * (other.y - self.y) / distance)
-            for x in range(self.x + dx * (dx > 0), self.x + dx * (dx < 0) - 1, -1):
-                for y in range(self.y + dy * (dy > 0), self.y + dy * (dy < 0) - 1, -1):
-                    if (x, y) not in Soldier.coordinates and -5 <= x <= 5 and -5 <= y <= 6:
-                        self.move_to(x, y)
-                        break
-
-    def wobble(self) -> None:
-        """
-        Move self randomly.
-        """
-        if tiles := [
+        mx = int(self.mobility * (other.x - self.x) / distance)
+        my = int(self.mobility * (other.y - self.y) / distance)
+        tiles = (
             (x, y)
             for x, y in itertools.product(
-                range(self.x - 1, self.x + 2), range(self.y - 1, self.y + 2)
+                range(self.x + mx * (mx > 0), self.x + mx * (mx < 0) - 1, -1),
+                range(self.y + my * (my > 0), self.y + my * (my < 0) - 1, -1),
             )
-            if (x, y) not in Soldier.coordinates and -5 <= x <= 5 and -5 <= y <= 5
-        ]:
-            self.move_to(*choice(tiles))
+            if (x, y) not in Soldier.coordinates and -5 <= x <= 5 and -5 <= y <= 6
+        )
+        if tile := next(tiles, None):
+            self.move_to(*tile)
 
     def assault(self, other) -> None:
         """
@@ -309,7 +299,7 @@ class King(Soldier):
 
 class Bowman(Soldier):
     """
-    Soldier with high attack range but low attak and low health.
+    Soldier with high attack range but low attack and low health.
     Counter swordsmen, countered by horsemen.
     """
 
