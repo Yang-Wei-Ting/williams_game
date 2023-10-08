@@ -1,6 +1,7 @@
 import itertools
 import math
 import tkinter as tk
+from abc import abstractmethod
 from tkinter.ttk import Progressbar
 
 from game.bases import GameObject
@@ -27,6 +28,11 @@ class Soldier(GameObject):
     level = 1
     experience = 0
     PROMOTION_EXPERIENCE = {1: 4, 2: 8, 3: 16, 4: 32, 5: math.inf}
+
+    @property
+    @abstractmethod
+    def counters(self):
+        raise NotImplementedError
 
     def __init__(self, canvas: tk.Canvas, x: int, y: int, *, color: str = Color.RED) -> None:
         """
@@ -139,14 +145,7 @@ class Soldier(GameObject):
         """
         Make self attack other.
         """
-        self.handle_click_event()
-
-        match self.__class__.__name__[0], other.__class__.__name__[0]:
-            case ("K", _) | ("B", "S") | ("H", "B") | ("S", "H"):
-                multiplier = 2
-            case _:
-                multiplier = 1
-
+        multiplier = 1 + (type(other) in self.counters)
         other.health -= max(self.attack * multiplier - other.defense, 0)
         self.experience += multiplier
         if other.health > 0:
@@ -283,6 +282,7 @@ class Soldier(GameObject):
             and not chosen_ally.attacked_this_turn
             and chosen_ally.get_distance_between(self) <= chosen_ally.attack_range
         ):
+            chosen_ally.handle_click_event()
             chosen_ally.assault(self)
             chosen_ally.promote()
 
@@ -296,6 +296,10 @@ class King(Soldier):
     health = 150
     mobility = 3
 
+    @property
+    def counters(self):
+        return {King, Bowman, Horseman, Swordsman}
+
 
 class Bowman(Soldier):
     """
@@ -307,6 +311,10 @@ class Bowman(Soldier):
     attack_range = 3
     health = 50
 
+    @property
+    def counters(self):
+        return {Swordsman}
+
 
 class Horseman(Soldier):
     """
@@ -316,6 +324,10 @@ class Horseman(Soldier):
 
     mobility = 3
 
+    @property
+    def counters(self):
+        return {Bowman}
+
 
 class Swordsman(Soldier):
     """
@@ -324,6 +336,10 @@ class Swordsman(Soldier):
     """
 
     defense = 20
+
+    @property
+    def counters(self):
+        return {Horseman}
 
 
 class Movement(GameObject):
