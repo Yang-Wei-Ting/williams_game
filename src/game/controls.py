@@ -100,8 +100,7 @@ class EndTurn(Control):
             try:
                 next(self._enemy_wave_generator_iterator)
             except StopIteration:
-                if Popup.instance is None:
-                    Popup(self._canvas, 0, 0).configure(image=Image.you_won)
+                self._display_popup("victory")
                 return
 
             for ally in Soldier.allies:
@@ -122,8 +121,7 @@ class EndTurn(Control):
                         if enemy.attacked_this_turn:
                             enemy.promote()
                 else:
-                    if Popup.instance is None:
-                        Popup(self._canvas, 0, 0).configure(image=Image.you_lost)
+                    self._display_popup("defeat")
                     break
 
             for enemy in Soldier.enemies:
@@ -132,6 +130,13 @@ class EndTurn(Control):
         for ally in Soldier.allies:
             ally.moved_this_turn = False
             ally.attacked_this_turn = False
+
+    def _display_popup(self, image_name: str) -> None:
+        """
+        Display pop-up image.
+        """
+        if Popup.instance is None:
+            Popup(self._canvas, 0, 0).configure(image=getattr(Image, image_name))
 
     def _enemy_wave_generator_function(self):
         """
