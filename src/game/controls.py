@@ -71,7 +71,7 @@ class EndTurn(Control):
         """
         Create widget and canvas window object.
         """
-        self._wave = self._create_enemies()
+        self._enemy_wave_generator_iterator = self._enemy_wave_generator_function()
         super().__init__(canvas, x, y)
 
     def _configure_widget(self) -> None:
@@ -98,7 +98,7 @@ class EndTurn(Control):
 
         if not Soldier.enemies:
             try:
-                next(self._wave)
+                next(self._enemy_wave_generator_iterator)
             except StopIteration:
                 if Popup.instance is None:
                     Popup(self._canvas, 0, 0).configure(image=Image.you_won)
@@ -133,9 +133,9 @@ class EndTurn(Control):
             ally.moved_this_turn = False
             ally.attacked_this_turn = False
 
-    def _create_enemies(self):
+    def _enemy_wave_generator_function(self):
         """
-        Create enemy instances.
+        Lazily create enemy waves.
         """
         # Wave 1
         for x in range(-1, 2):
