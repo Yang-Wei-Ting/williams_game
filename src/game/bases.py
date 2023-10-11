@@ -1,4 +1,3 @@
-import math
 import tkinter as tk
 from abc import ABC, abstractmethod
 
@@ -58,11 +57,11 @@ class GameObject(tk.Button, ABC):
         self.y = y
         self._canvas.coords(self._main_widget_id, self.x * 60 + 390, -self.y * 60 + 395)
 
-    def get_distance_between(self, other) -> float:
+    def get_distance_between(self, other) -> int:
         """
-        Return the distance between self and other.
+        Return the Manhattan distance between self and other.
         """
         if isinstance(other, tuple):
-            return math.dist((self.x, self.y), other)
+            return abs(other[0] - self.x) + abs(other[1] - self.y)
 
-        return math.dist((self.x, self.y), (other.x, other.y))
+        return abs(other.x - self.x) + abs(other.y - self.y)
