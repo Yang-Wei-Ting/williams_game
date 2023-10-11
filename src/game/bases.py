@@ -62,4 +62,7 @@ class GameObject(tk.Button, ABC):
         """
         Return the distance between self and other.
         """
+        if isinstance(other, tuple):
+            return math.dist((self.x, self.y), other)
+
         return math.dist((self.x, self.y), (other.x, other.y))

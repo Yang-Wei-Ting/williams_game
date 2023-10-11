@@ -267,7 +267,7 @@ class Soldier(GameObject):
                 for coordinate in coordinates:
                     if (
                         coordinate not in Soldier.coordinates
-                        and math.dist((self.x, self.y), coordinate) <= self.mobility
+                        and self.get_distance_between(coordinate) <= self.mobility
                     ):
                         Movement(self._canvas, *coordinate)
 
