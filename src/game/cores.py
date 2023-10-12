@@ -355,7 +355,7 @@ class Movement(GameObject):
         Configure widget.
         """
         self.configure(
-            image=Image.transparent_10x10,
+            image=Image.transparent_12x12,
             background="Royal Blue",
             activebackground="Royal Blue",
             relief=tk.FLAT,
