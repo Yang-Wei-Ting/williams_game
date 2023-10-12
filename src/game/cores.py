@@ -251,7 +251,7 @@ class Soldier(GameObject):
             Soldier.chosen_ally = self
 
             if not self.attacked_this_turn:
-                AttackRange(self._canvas, self.x, self.y, radius=self.attack_range)
+                AttackRange(self._canvas, self.x, self.y, half_diagonal=self.attack_range)
 
             if not self.moved_this_turn:
                 coordinates = itertools.product(
@@ -267,7 +267,7 @@ class Soldier(GameObject):
                 for coordinate in coordinates:
                     if (
                         coordinate not in Soldier.coordinates
-                        and math.dist((self.x, self.y), coordinate) <= self.mobility
+                        and self.get_distance_between(coordinate) <= self.mobility
                     ):
                         Movement(self._canvas, *coordinate)
 
@@ -396,11 +396,11 @@ class AttackRange(GameObject):
 
     instance = None
 
-    def __init__(self, canvas: tk.Canvas, x: int, y: int, *, radius: int) -> None:
+    def __init__(self, canvas: tk.Canvas, x: int, y: int, *, half_diagonal: int) -> None:
         """
         Create canvas window object.
         """
-        self._radius = radius
+        self._half_diagonal = half_diagonal
         super().__init__(canvas, x, y)
 
     def _create_widget(self) -> None:
@@ -420,7 +420,7 @@ class AttackRange(GameObject):
         self._main_widget_id = self._canvas.create_image(
             self.x * 60 + 390,
             -self.y * 60 + 395,
-            image=getattr(Image, "red_circle_{0}x{0}".format(self._radius * 120)),
+            image=getattr(Image, "red_diamond_{0}x{0}".format(self._half_diagonal * 120)),
         )
         AttackRange.instance = self
 
