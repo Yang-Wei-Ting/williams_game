@@ -133,8 +133,8 @@ class Soldier(GameObject):
         tiles = (
             (x, y)
             for x, y in itertools.product(
-                range(self.x + mx * (mx > 0), self.x + mx * (mx < 0) - 1, -1),
-                range(self.y + my * (my > 0), self.y + my * (my < 0) - 1, -1),
+                range(self.x + mx, self.x - 1, -1) if mx >= 0 else range(self.x + mx, self.x + 1),
+                range(self.y + my, self.y - 1, -1) if my >= 0 else range(self.y + my, self.y + 1),
             )
             if (x, y) not in Soldier.coordinates and -5 <= x <= 5 and -5 <= y <= 6
         )
