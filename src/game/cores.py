@@ -2,6 +2,7 @@ import itertools
 import math
 import tkinter as tk
 from abc import abstractmethod
+from random import shuffle
 from tkinter.ttk import Progressbar
 
 from game.bases import GameObject
@@ -128,18 +129,45 @@ class Soldier(GameObject):
         Move self toward other.
         """
         distance = self.get_distance_between(other)
-        mx = int(self.mobility * (other.x - self.x) / distance)
-        my = int(self.mobility * (other.y - self.y) / distance)
-        tiles = (
-            (x, y)
-            for x, y in itertools.product(
-                range(self.x + mx * (mx > 0), self.x + mx * (mx < 0) - 1, -1),
-                range(self.y + my * (my > 0), self.y + my * (my < 0) - 1, -1),
+
+        mx = self.mobility * (other.x - self.x) / distance
+        my = self.mobility * (other.y - self.y) / distance
+
+        sign_x = 1 if mx >= 0 else -1
+        sign_y = 1 if my >= 0 else -1
+
+        abs_x = abs(mx)
+        abs_y = abs(my)
+
+        int_x, frac_x = int(abs_x), abs_x % 1
+        int_y, frac_y = int(abs_y), abs_y % 1
+
+        vectors = []
+        if frac_x == 0:
+            vectors.append((sign_x * int_x, sign_y * int_y))
+        elif frac_x > frac_y:
+            vectors.append((sign_x * (int_x + 1), sign_y * int_y))
+        elif frac_x < frac_y:
+            vectors.append((sign_x * int_x, sign_y * (int_y + 1)))
+        else:
+            vectors.extend([
+                (sign_x * (int_x + 1), sign_y * int_y),
+                (sign_x * int_x, sign_y * (int_y + 1)),
+            ])
+            shuffle(vectors)
+
+        for mx, my in vectors:
+            tiles = (
+                (x, y)
+                for x, y in itertools.product(
+                    range(self.x + mx, self.x - 1, -1) if mx >= 0 else range(self.x + mx, self.x + 1),
+                    range(self.y + my, self.y - 1, -1) if my >= 0 else range(self.y + my, self.y + 1),
+                )
+                if (x, y) not in Soldier.coordinates and -5 <= x <= 5 and -5 <= y <= 6
             )
-            if (x, y) not in Soldier.coordinates and -5 <= x <= 5 and -5 <= y <= 6
-        )
-        if tile := next(tiles, None):
-            self.move_to(*tile)
+            if tile := next(tiles, None):
+                self.move_to(*tile)
+                break
 
     def assault(self, other) -> None:
         """
