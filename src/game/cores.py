@@ -2,7 +2,7 @@ import itertools
 import math
 import tkinter as tk
 from abc import abstractmethod
-from random import shuffle
+from random import sample, shuffle
 from tkinter.ttk import Progressbar
 
 from game.bases import GameObject
@@ -124,50 +124,50 @@ class Soldier(GameObject):
         if self.attacked_this_turn:
             self.set_inactive()
 
-    def move_toward(self, other) -> None:
+    def get_coordinate_after_moving_toward(self, other) -> tuple:
         """
-        Move self toward other.
+        Get coordinate after moving self toward other using A* pathfinding algorithm.
         """
-        distance = self.get_distance_between(other)
+        open_set = {(self.x, self.y)}
+        closed_set = set()
 
-        mx = self.mobility * (other.x - self.x) / distance
-        my = self.mobility * (other.y - self.y) / distance
+        came_from = {(self.x, self.y): None}
+        cost_so_far = {(self.x, self.y): 0}
 
-        sign_x = 1 if mx >= 0 else -1
-        sign_y = 1 if my >= 0 else -1
+        while open_set:
+            current = min(open_set, key=lambda c: cost_so_far[c] + other.get_distance_between(c))
 
-        abs_x = abs(mx)
-        abs_y = abs(my)
+            if current == (other.x, other.y):
+                path = []
+                while came_from[current]:
+                    path.append(current)
+                    current = came_from[current]
 
-        int_x, frac_x = int(abs_x), abs_x % 1
-        int_y, frac_y = int(abs_y), abs_y % 1
+                return path[1:][-self.mobility:][0]
 
-        vectors = []
-        if frac_x == 0:
-            vectors.append((sign_x * int_x, sign_y * int_y))
-        elif frac_x > frac_y:
-            vectors.append((sign_x * (int_x + 1), sign_y * int_y))
-        elif frac_x < frac_y:
-            vectors.append((sign_x * int_x, sign_y * (int_y + 1)))
-        else:
-            vectors.extend([
-                (sign_x * (int_x + 1), sign_y * int_y),
-                (sign_x * int_x, sign_y * (int_y + 1)),
-            ])
-            shuffle(vectors)
+            for x, y in [
+                (current[0] + 1, current[1]),
+                (current[0], current[1] + 1),
+                (current[0] - 1, current[1]),
+                (current[0], current[1] - 1),
+            ]:
+                if (x, y) not in Soldier.coordinates - {(other.x, other.y)} and -5 <= x <= 5 and -5 <= y <= 6:
+                    if (x, y) not in open_set | closed_set:
+                        open_set.add((x, y))
+                        came_from[(x, y)] = current
+                        cost_so_far[(x, y)] = cost_so_far[current] + 1
+                    elif cost_so_far[(x, y)] > cost_so_far[current] + 1:
+                        if (x, y) in closed_set:
+                            closed_set.remove((x, y))
+                            open_set.add((x, y))
 
-        for mx, my in vectors:
-            tiles = (
-                (x, y)
-                for x, y in itertools.product(
-                    range(self.x + mx, self.x - 1, -1) if mx >= 0 else range(self.x + mx, self.x + 1),
-                    range(self.y + my, self.y - 1, -1) if my >= 0 else range(self.y + my, self.y + 1),
-                )
-                if (x, y) not in Soldier.coordinates and -5 <= x <= 5 and -5 <= y <= 6
-            )
-            if tile := next(tiles, None):
-                self.move_to(*tile)
-                break
+                        came_from[(x, y)] = current
+                        cost_so_far[(x, y)] = cost_so_far[current] + 1
+
+            open_set.remove(current)
+            closed_set.add(current)
+
+        return (self.x, self.y)
 
     def assault(self, other) -> None:
         """
@@ -186,21 +186,6 @@ class Soldier(GameObject):
         if self.moved_this_turn:
             self.set_inactive()
 
-    def attack_surrounding(self) -> None:
-        """
-        If any rival instance lies within self's attack range, make self attack it.
-        """
-        match self.color:
-            case Color.BLUE:
-                others = Soldier.enemies
-            case Color.RED:
-                others = Soldier.allies
-
-        for other in others:
-            if self.get_distance_between(other) <= self.attack_range:
-                self.assault(other)
-                break
-
     def promote(self, experience: int = 0) -> None:
         """
         """
@@ -216,6 +201,47 @@ class Soldier(GameObject):
         color = "gray" if self.moved_this_turn and self.attacked_this_turn else Color.MAPPING[self.color]
         name = f"{color}_{self.__class__.__name__.lower()}_{self.level}"
         self.config(image=getattr(Image, name))
+
+    def hunt(self) -> None:
+        """
+        First, categorize targets into three groups, they are:
+        Killables: Targets that can be killed by self.
+        Hittables: Targets that can be hit but not killed by self.
+        Untouchables: Targets that cannot be hit by self.
+        Targets that belong to killables group are the most preferable and those
+        that belong to untouchables group are the least preferable.
+        In each group, targets that can be dealt highest damage are the most preferable.
+        """
+        match self.color:
+            case Color.BLUE:
+                targets = Soldier.enemies
+            case Color.RED:
+                targets = Soldier.allies
+
+        killables, hittables, untouchables = [], [], []
+        for target in sample(targets, len(targets)):
+            distance = self.get_distance_between(target)
+            new_coordinate = self.get_coordinate_after_moving_toward(target)
+            damage = min(self.attack * (1 + (type(target) in self.counters)) - target.defense, target.health)
+
+            if self.get_distance_between(new_coordinate) + self.attack_range < distance:
+                untouchables.append((damage, new_coordinate))
+            elif damage < target.health:
+                hittables.append((damage, distance, new_coordinate, target))
+            else:
+                killables.append((damage, distance, new_coordinate, target))
+
+        infos = killables or hittables or untouchables
+        info = max(infos, key=lambda info: info[0])
+
+        if infos is untouchables:
+            self.move_to(*info[1])
+        else:
+            if self.attack_range < info[1]:
+                self.move_to(*info[2])
+
+            self.assault(info[3])
+            self.promote()
 
     def heal_itself(self, amount: int) -> None:
         """

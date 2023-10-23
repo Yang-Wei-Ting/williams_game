@@ -116,15 +116,7 @@ class EndTurn(Control):
                 self._display_popup("defeat")
                 break
 
-            enemy.attack_surrounding()
-            if enemy.attacked_this_turn:
-                enemy.promote()
-            else:
-                enemy.move_toward(Soldier.allies[0])
-
-                enemy.attack_surrounding()
-                if enemy.attacked_this_turn:
-                    enemy.promote()
+            enemy.hunt()
 
     def _summon_next_wave(self) -> None:
         """
