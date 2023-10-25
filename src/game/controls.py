@@ -2,7 +2,7 @@ import subprocess
 import sys
 import tkinter as tk
 from abc import abstractmethod
-from random import choice
+from random import choice, sample
 
 from game.bases import GameObject
 from game.cores import Bowman, Horseman, King, Soldier, Swordsman
@@ -114,7 +114,7 @@ class EndTurn(Control):
         if not Soldier.allies:
             self._display_popup("defeat")
 
-        for enemy in Soldier.enemies:
+        for enemy in sample(Soldier.enemies, len(Soldier.enemies)):
             enemy.hunt()
 
             if not Soldier.allies:
