@@ -1,8 +1,8 @@
+import heapq
 import itertools
 import math
 import tkinter as tk
 from abc import abstractmethod
-from random import shuffle
 from tkinter.ttk import Progressbar
 
 from game.bases import GameObject
@@ -124,51 +124,6 @@ class Soldier(GameObject):
         if self.attacked_this_turn:
             self.set_inactive()
 
-    def move_toward(self, other) -> None:
-        """
-        Move self toward other.
-        """
-        distance = self.get_distance_between(other)
-
-        mx = self.mobility * (other.x - self.x) / distance
-        my = self.mobility * (other.y - self.y) / distance
-
-        sign_x = 1 if mx >= 0 else -1
-        sign_y = 1 if my >= 0 else -1
-
-        abs_x = abs(mx)
-        abs_y = abs(my)
-
-        int_x, frac_x = int(abs_x), abs_x % 1
-        int_y, frac_y = int(abs_y), abs_y % 1
-
-        vectors = []
-        if frac_x == 0:
-            vectors.append((sign_x * int_x, sign_y * int_y))
-        elif frac_x > frac_y:
-            vectors.append((sign_x * (int_x + 1), sign_y * int_y))
-        elif frac_x < frac_y:
-            vectors.append((sign_x * int_x, sign_y * (int_y + 1)))
-        else:
-            vectors.extend([
-                (sign_x * (int_x + 1), sign_y * int_y),
-                (sign_x * int_x, sign_y * (int_y + 1)),
-            ])
-            shuffle(vectors)
-
-        for mx, my in vectors:
-            tiles = (
-                (x, y)
-                for x, y in itertools.product(
-                    range(self.x + mx, self.x - 1, -1) if mx >= 0 else range(self.x + mx, self.x + 1),
-                    range(self.y + my, self.y - 1, -1) if my >= 0 else range(self.y + my, self.y + 1),
-                )
-                if (x, y) not in Soldier.coordinates and -5 <= x <= 5 and -5 <= y <= 6
-            )
-            if tile := next(tiles, None):
-                self.move_to(*tile)
-                break
-
     def assault(self, other) -> None:
         """
         Make self attack other.
@@ -186,21 +141,6 @@ class Soldier(GameObject):
         if self.moved_this_turn:
             self.set_inactive()
 
-    def attack_surrounding(self) -> None:
-        """
-        If any rival instance lies within self's attack range, make self attack it.
-        """
-        match self.color:
-            case Color.BLUE:
-                others = Soldier.enemies
-            case Color.RED:
-                others = Soldier.allies
-
-        for other in others:
-            if self.get_distance_between(other) <= self.attack_range:
-                self.assault(other)
-                break
-
     def promote(self, experience: int = 0) -> None:
         """
         """
@@ -216,6 +156,86 @@ class Soldier(GameObject):
         color = "gray" if self.moved_this_turn and self.attacked_this_turn else Color.MAPPING[self.color]
         name = f"{color}_{self.__class__.__name__.lower()}_{self.level}"
         self.config(image=getattr(Image, name))
+
+    def get_coordinate_after_moving_toward(self, other) -> tuple:
+        """
+        Use the A* pathfinding algorithm to compute the shortest path for self
+        to move toward other until other is within self's attack range.
+        Deduce the new coordinate that self can reach this turn by following
+        the aforementioned shortest path.
+        """
+        start = (self.x, self.y)
+
+        front = []
+        heapq.heappush(front, (0, start))
+        cost_table = {start: 0}
+        parent_table = {start: None}
+
+        while front:
+            current = heapq.heappop(front)[1]
+
+            if other.get_distance_between(current) <= self.attack_range:
+                path = []
+                while current != start:
+                    path.append(current)
+                    current = parent_table[current]
+                path.append(start)
+                return path[max(-len(path), -self.mobility - 1)]
+
+            new_cost = cost_table[current] + 1
+            for dx, dy in {(1, 0), (0, 1), (-1, 0), (0, -1)}:
+                x, y = current[0] + dx, current[1] + dy
+                if (
+                    -5 <= x <= 5 and
+                    -5 <= y <= 6 and
+                    (x, y) not in Soldier.coordinates and
+                    ((x, y) not in cost_table or new_cost < cost_table[(x, y)])
+                ):
+                    heapq.heappush(front, (new_cost + other.get_distance_between((x, y)), (x, y)))
+                    cost_table[(x, y)] = new_cost
+                    parent_table[(x, y)] = current
+
+        # TODO: When other is surrounded by obstacles, self should try to approach it.
+        return start
+
+    def hunt(self) -> None:
+        """
+        Identify the optimal rival instance then move toward and potentially attack it.
+        """
+        MOVE_THEN_KILL = 1
+        MOVE_THEN_HIT = 2
+        MOVE = 3
+
+        match self.color:
+            case Color.BLUE:
+                others = Soldier.enemies
+            case Color.RED:
+                others = Soldier.allies
+
+        heap = []
+        for i, other in enumerate(others):
+            coordinate = self.get_coordinate_after_moving_toward(other)
+            distance = other.get_distance_between(coordinate)
+            damage = min(self.attack * (1 + (type(other) in self.counters)) - other.defense, other.health)
+
+            if distance > self.attack_range:
+                action = MOVE
+                order_by = [distance, -damage, other.health]
+            elif damage < other.health:
+                action = MOVE_THEN_HIT
+                order_by = [-damage, other.health, distance]
+            else:
+                action = MOVE_THEN_KILL
+                order_by = [-damage, distance]
+
+            heapq.heappush(heap, (action, *order_by, i, coordinate, other))
+
+        action, *_, coordinate, other = heapq.heappop(heap)
+
+        self.move_to(*coordinate)
+        if action in {MOVE_THEN_HIT, MOVE_THEN_KILL}:
+            self.assault(other)
+            self.promote()
 
     def heal_itself(self, amount: int) -> None:
         """

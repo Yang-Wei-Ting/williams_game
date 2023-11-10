@@ -116,15 +116,7 @@ class EndTurn(Control):
             return
 
         for enemy in sample(Soldier.enemies, len(Soldier.enemies)):
-            enemy.attack_surrounding()
-            if enemy.attacked_this_turn:
-                enemy.promote()
-            else:
-                enemy.move_toward(Soldier.allies[0])
-
-                enemy.attack_surrounding()
-                if enemy.attacked_this_turn:
-                    enemy.promote()
+            enemy.hunt()
 
             if not Soldier.allies:
                 self._display_popup("defeat")
