@@ -2,7 +2,7 @@ import subprocess
 import sys
 import tkinter as tk
 from abc import abstractmethod
-from random import choice
+from random import choice, sample
 
 from game.bases import GameObject
 from game.cores import Bowman, Horseman, King, Soldier, Swordsman
@@ -111,7 +111,7 @@ class EndTurn(Control):
         Execute each enemy's turn.
         If there is no ally instance, display defeat pop-up.
         """
-        for enemy in Soldier.enemies:
+        for enemy in sample(Soldier.enemies, len(Soldier.enemies)):
             if not Soldier.allies:
                 self._display_popup("defeat")
                 break
