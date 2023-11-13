@@ -111,11 +111,11 @@ class EndTurn(Control):
         Execute each enemy's turn.
         If there is no ally instance, display defeat pop-up.
         """
-        for enemy in sample(Soldier.enemies, len(Soldier.enemies)):
-            if not Soldier.allies:
-                self._display_popup("defeat")
-                break
+        if not Soldier.allies:
+            self._display_popup("defeat")
+            return
 
+        for enemy in sample(Soldier.enemies, len(Soldier.enemies)):
             enemy.attack_surrounding()
             if enemy.attacked_this_turn:
                 enemy.promote()
@@ -125,6 +125,10 @@ class EndTurn(Control):
                 enemy.attack_surrounding()
                 if enemy.attacked_this_turn:
                     enemy.promote()
+
+            if not Soldier.allies:
+                self._display_popup("defeat")
+                break
 
     def _summon_next_wave(self) -> None:
         """
