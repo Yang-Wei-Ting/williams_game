@@ -1,8 +1,8 @@
 import heapq
-import itertools
 import math
 import tkinter as tk
 from abc import abstractmethod
+from queue import Queue
 from tkinter.ttk import Progressbar
 
 from game.bases import GameObject
@@ -310,22 +310,26 @@ class Soldier(GameObject):
                 AttackRange(self._canvas, self.x, self.y, half_diagonal=self.attack_range)
 
             if not self.moved_this_turn:
-                coordinates = itertools.product(
-                    range(
-                        max(self.x - self.mobility, -5),
-                        min(self.x + self.mobility, 5) + 1,
-                    ),
-                    range(
-                        max(self.y - self.mobility, -5),
-                        min(self.y + self.mobility, 3) + 1,
-                    ),
-                )
-                for coordinate in coordinates:
-                    if (
-                        coordinate not in Soldier.coordinates
-                        and self.get_distance_between(coordinate) <= self.mobility
-                    ):
-                        Movement(self._canvas, *coordinate)
+                frontier = Queue()
+                frontier.put((self.x, self.y))
+                cost_table = {(self.x, self.y): 0}
+
+                while not frontier.empty():
+                    current = frontier.get()
+
+                    new_cost = cost_table[current] + 1
+                    for dx, dy in {(1, 0), (0, 1), (-1, 0), (0, -1)}:
+                        x, y = current[0] + dx, current[1] + dy
+                        if (
+                            -5 <= x <= 5 and
+                            -5 <= y <= 3 and
+                            (x, y) not in Soldier.coordinates and
+                            (x, y) not in cost_table and
+                            new_cost <= self.mobility
+                        ):
+                            frontier.put((x, y))
+                            Movement(self._canvas, x, y)
+                            cost_table[(x, y)] = new_cost
 
     def _handle_enemy_click_event(self) -> None:
         """
