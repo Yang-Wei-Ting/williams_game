@@ -71,7 +71,7 @@ class EndTurn(Control):
         """
         Create widget and canvas window object.
         """
-        self._wave = self._create_enemies()
+        self._enemy_wave_generator_iterator = self._enemy_wave_generator_function()
         super().__init__(canvas, x, y)
 
     def _configure_widget(self) -> None:
@@ -84,58 +84,71 @@ class EndTurn(Control):
     def handle_click_event(self) -> None:
         """
         If an ally instance is chosen, unselect it first.
-        If the targeted ally instance is out of an enemy instance's attack range,
-        move the enemy instance toward the targeted ally instance.
-        If any ally instance lies within the enemy instance's attack range, make
-        the enemy instance attack the ally instance.
-        If there's no enemy instance, heal all ally instances then create enemy instances.
+        Activate all ally instances.
+        If there's any enemy instance left, execute computer's turn then activate
+        all enemy instances. Otherwise, summon next enemy wave.
         """
         if Soldier.chosen_ally:
             Soldier.chosen_ally.handle_click_event()
 
         for ally in Soldier.allies:
             ally.set_active()
-
-        if not Soldier.enemies:
-            try:
-                next(self._wave)
-            except StopIteration:
-                if Popup.instance is None:
-                    Popup(self._canvas, 0, 0).configure(image=Image.you_won)
-                return
-
-            for ally in Soldier.allies:
-                ally.heal_itself(40)
-        else:
-            for enemy in Soldier.enemies:
-                if Soldier.allies:
-                    enemy.moved_this_turn = False
-                    enemy.attacked_this_turn = False
-
-                    enemy.attack_surrounding()
-                    if enemy.attacked_this_turn:
-                        enemy.promote()
-                    else:
-                        enemy.move_toward(Soldier.allies[0])
-
-                        enemy.attack_surrounding()
-                        if enemy.attacked_this_turn:
-                            enemy.promote()
-                else:
-                    if Popup.instance is None:
-                        Popup(self._canvas, 0, 0).configure(image=Image.you_lost)
-                    break
-
-            for enemy in Soldier.enemies:
-                enemy.set_active()
-
-        for ally in Soldier.allies:
             ally.moved_this_turn = False
             ally.attacked_this_turn = False
 
-    def _create_enemies(self):
+        if Soldier.enemies:
+            self._execute_computer_turn()
+
+            for enemy in Soldier.enemies:
+                enemy.set_active()
+                enemy.moved_this_turn = False
+                enemy.attacked_this_turn = False
+        else:
+            self._summon_next_wave()
+
+    def _execute_computer_turn(self) -> None:
         """
-        Create enemy instances.
+        Execute each enemy's turn.
+        If there is no ally instance, display defeat pop-up.
+        """
+        for enemy in Soldier.enemies:
+            if not Soldier.allies:
+                self._display_popup("defeat")
+                break
+
+            enemy.attack_surrounding()
+            if enemy.attacked_this_turn:
+                enemy.promote()
+            else:
+                enemy.move_toward(Soldier.allies[0])
+
+                enemy.attack_surrounding()
+                if enemy.attacked_this_turn:
+                    enemy.promote()
+
+    def _summon_next_wave(self) -> None:
+        """
+        Summon next enemy wave and heal all ally instances.
+        If there is no more enemy wave, display victory pop-up.
+        """
+        try:
+            next(self._enemy_wave_generator_iterator)
+        except StopIteration:
+            self._display_popup("victory")
+        else:
+            for ally in Soldier.allies:
+                ally.heal_itself(40)
+
+    def _display_popup(self, image_name: str) -> None:
+        """
+        Display pop-up image.
+        """
+        if Popup.instance is None:
+            Popup(self._canvas, 0, 0).configure(image=getattr(Image, image_name))
+
+    def _enemy_wave_generator_function(self):
+        """
+        Lazily create enemy waves.
         """
         # Wave 1
         for x in range(-1, 2):
