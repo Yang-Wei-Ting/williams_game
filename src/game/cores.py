@@ -166,13 +166,13 @@ class Soldier(GameObject):
         """
         start = (self.x, self.y)
 
-        front = []
-        heapq.heappush(front, (0, start))
+        frontier = []
+        heapq.heappush(frontier, (0, start))
         cost_table = {start: 0}
         parent_table = {start: None}
 
-        while front:
-            current = heapq.heappop(front)[1]
+        while frontier:
+            current = heapq.heappop(frontier)[1]
 
             if other.get_distance_between(current) <= self.attack_range:
                 path = []
@@ -191,7 +191,7 @@ class Soldier(GameObject):
                     (x, y) not in Soldier.coordinates and
                     ((x, y) not in cost_table or new_cost < cost_table[(x, y)])
                 ):
-                    heapq.heappush(front, (new_cost + other.get_distance_between((x, y)), (x, y)))
+                    heapq.heappush(frontier, (new_cost + other.get_distance_between((x, y)), (x, y)))
                     cost_table[(x, y)] = new_cost
                     parent_table[(x, y)] = current
 
