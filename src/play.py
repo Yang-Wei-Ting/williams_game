@@ -4,7 +4,7 @@
 
 
 import tkinter as tk
-from random import choice, choices
+from random import choices
 from tkinter.ttk import Style
 
 from game.controls import EndTurn, Restart
@@ -68,11 +68,6 @@ class Program:
         for x in range(90, 691, 60):
             for y in range(30, 691, 60):
                 create(x, y, image=choices(LANDS, weights=WEIGHTS)[0])
-
-        # Create mountains
-        create(choice(range(210, 391, 60)), choice([210, 270]), image=Image.mountain_1)
-        create(choice(range(210, 391, 60)), choice(range(450, 571, 60)), image=Image.mountain_2)
-        create(570, choice(range(210, 571, 60)), image=Image.mountain_3)
 
         # Create water
         for i in range(90, 691, 60):
