@@ -26,10 +26,6 @@ class Soldier(GameObject):
     health = 70
     mobility = 2
 
-    level = 1
-    experience = 0
-    PROMOTION_EXPERIENCE = {1: 4, 2: 8, 3: 16, 4: 32, 5: math.inf}
-
     @property
     @abstractmethod
     def counters(self):
@@ -40,6 +36,8 @@ class Soldier(GameObject):
         Create widget and canvas window object.
         """
         self.color = color
+        self.level = 1
+        self.experience = 0
         self.moved_this_turn = False
         self.attacked_this_turn = False
         super().__init__(canvas, x, y)
@@ -157,8 +155,9 @@ class Soldier(GameObject):
         """
         self.experience += experience
 
-        while self.experience >= self.PROMOTION_EXPERIENCE[self.level]:
-            self.experience -= self.PROMOTION_EXPERIENCE[self.level]
+        LEVEL_UP_EXPERIENCE_BY_LEVEL = {1: 4, 2: 8, 3: 16, 4: 32, 5: math.inf}
+        while self.experience >= LEVEL_UP_EXPERIENCE_BY_LEVEL[self.level]:
+            self.experience -= LEVEL_UP_EXPERIENCE_BY_LEVEL[self.level]
             self.level += 1
             self.attack += 3
             self.defense += 2
