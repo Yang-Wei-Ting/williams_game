@@ -44,6 +44,21 @@ class Soldier(GameObject):
         self.attacked_this_turn = False
         super().__init__(canvas, x, y)
 
+    def _create_widget(self) -> None:
+        """
+        Create widget.
+        """
+        super()._create_widget()
+        self.healthbar = Progressbar(
+            self._canvas,
+            length=self.health / 2,
+            maximum=self.health,
+            mode="determinate",
+            orient=tk.HORIZONTAL,
+            style="TProgressbar",
+            value=self.health,
+        )
+
     def _configure_widget(self) -> None:
         """
         Configure widget.
@@ -70,16 +85,6 @@ class Soldier(GameObject):
             self.x * 60 + 390,
             -self.y * 60 + 395,
             window=self,
-        )
-
-        self.healthbar = Progressbar(
-            self._canvas,
-            length=self.health / 2,
-            maximum=self.health,
-            mode="determinate",
-            orient=tk.HORIZONTAL,
-            style="TProgressbar",
-            value=self.health,
         )
         self._healthbar_id = self._canvas.create_window(
             self.x * 60 + 390,
