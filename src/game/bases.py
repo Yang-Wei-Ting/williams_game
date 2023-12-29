@@ -43,11 +43,10 @@ class GameObject(tk.Button, ABC):
 
     def remove_canvas_window_object(self) -> None:
         """
-        Remove canvas window object. Do nothing if no canvas window object exists.
+        Remove canvas window object.
         """
-        if hasattr(self, "_main_widget_id"):
-            self._canvas.delete(self._main_widget_id)
-            delattr(self, "_main_widget_id")
+        self._canvas.delete(self._main_widget_id)
+        del self._main_widget_id
 
     def get_distance_between(self, other) -> int:
         """

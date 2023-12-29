@@ -103,19 +103,17 @@ class Soldier(GameObject):
         Remove self from 'Soldier.allies' or 'Soldier.enemies'.
         Remove self's coordinate from 'Soldier.coordinates'.
         """
-        super().remove_canvas_window_object()
-
-        if hasattr(self, "_healthbar_id"):
-            self._canvas.delete(self._healthbar_id)
-            delattr(self, "_healthbar_id")
-            delattr(self, "healthbar")
-
+        Soldier.coordinates.remove((self.x, self.y))
         match self.color:
             case Color.BLUE:
                 Soldier.allies.remove(self)
             case Color.RED:
                 Soldier.enemies.remove(self)
-        Soldier.coordinates.remove((self.x, self.y))
+
+        self._canvas.delete(self._healthbar_id)
+        del self._healthbar_id
+        del self.healthbar
+        super().remove_canvas_window_object()
 
     def move_to(self, x: int, y: int) -> None:
         """
