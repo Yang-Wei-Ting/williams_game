@@ -49,14 +49,6 @@ class GameObject(tk.Button, ABC):
             self._canvas.delete(self._main_widget_id)
             delattr(self, "_main_widget_id")
 
-    def move_to(self, x: int, y: int) -> None:
-        """
-        Move self to the new coordinate and update canvas window object's coordinate.
-        """
-        self.x = x
-        self.y = y
-        self._canvas.coords(self._main_widget_id, self.x * 60 + 390, -self.y * 60 + 390)
-
     def get_distance_between(self, other) -> int:
         """
         Return the Manhattan distance between self and other.
