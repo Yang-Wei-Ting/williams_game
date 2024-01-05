@@ -168,7 +168,7 @@ class Soldier(GameObject):
         name = f"{color}_{self.__class__.__name__.lower()}_{self.level}"
         self.config(image=getattr(Image, name))
 
-    def get_coordinate_after_moving_toward(self, other) -> tuple:
+    def _get_coordinate_after_moving_toward(self, other) -> tuple:
         """
         Use the A* pathfinding algorithm to compute the shortest path for self
         to move toward other until other is within self's attack range.
@@ -225,7 +225,7 @@ class Soldier(GameObject):
 
         heap = []
         for i, other in enumerate(others):
-            coordinate = self.get_coordinate_after_moving_toward(other)
+            coordinate = self._get_coordinate_after_moving_toward(other)
             distance = other.get_distance_between(coordinate)
             damage = min(self.attack * (1 + (type(other) in self.counters)) - other.defense, other.health)
 
