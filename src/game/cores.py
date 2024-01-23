@@ -61,17 +61,14 @@ class Soldier(GameObject):
         """
         Configure widget.
         """
-        name = f"{Color.MAPPING[self.color]}_{self.__class__.__name__.lower()}_{self.level}"
         self.configure(
-            image=getattr(Image, name),
-            background=self.color,
-            activebackground=self.color,
             relief=tk.RAISED,
             borderwidth=5,
             highlightthickness=0,
             cursor="hand2",
             command=self.handle_click_event,
         )
+        self.refresh_image()
 
     def _create_canvas_window_object(self) -> None:
         """
@@ -128,8 +125,7 @@ class Soldier(GameObject):
         Soldier.coordinates.add((self.x, self.y))
 
         self.moved_this_turn = True
-        if self.attacked_this_turn:
-            self.set_inactive()
+        self.refresh_image()
 
     def assault(self, other) -> None:
         """
@@ -145,8 +141,7 @@ class Soldier(GameObject):
             self.experience += 1
 
         self.attacked_this_turn = True
-        if self.moved_this_turn:
-            self.set_inactive()
+        self.refresh_image()
 
     def promote(self, experience: int = 0) -> None:
         """
@@ -161,9 +156,7 @@ class Soldier(GameObject):
             self.defense += 2
             self.heal_itself(10)
 
-        color = "gray" if self.moved_this_turn and self.attacked_this_turn else Color.MAPPING[self.color]
-        name = f"{color}_{self.__class__.__name__.lower()}_{self.level}"
-        self.config(image=getattr(Image, name))
+        self.refresh_image()
 
     def _get_coordinate_after_moving_toward(self, other) -> tuple:
         """
@@ -252,26 +245,23 @@ class Soldier(GameObject):
         self.health = min(self.health + amount, self.__class__.health)
         self.healthbar["value"] = self.health
 
-    def set_inactive(self) -> None:
+    def refresh_image(self) -> None:
         """
-        Change widget's color into gray.
+        Update image, background, and activebackground values based on self.moved_this_turn,
+        self.attacked_this_turn, self.color, type of self, and self.level.
         """
-        name = f"gray_{self.__class__.__name__.lower()}_{self.level}"
-        self.config(
-            image=getattr(Image, name),
-            background=Color.GRAY,
-            activebackground=Color.GRAY,
-        )
+        if self.moved_this_turn and self.attacked_this_turn:
+            color = Color.GRAY
+        else:
+            color = self.color
 
-    def set_active(self) -> None:
-        """
-        Reset widget's color.
-        """
-        name = f"{Color.MAPPING[self.color]}_{self.__class__.__name__.lower()}_{self.level}"
+        color_name = Color.COLOR_NAME_BY_HEX_TRIPLET[color]
+        soldier_type = type(self).__name__.lower()
+
         self.config(
-            image=getattr(Image, name),
-            background=self.color,
-            activebackground=self.color,
+            image=getattr(Image, f"{color_name}_{soldier_type}_{self.level}"),
+            background=color,
+            activebackground=color,
         )
 
     def handle_click_event(self) -> None:

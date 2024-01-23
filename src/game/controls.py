@@ -92,17 +92,17 @@ class EndTurn(Control):
             Soldier.chosen_ally.handle_click_event()
 
         for ally in Soldier.allies:
-            ally.set_active()
             ally.moved_this_turn = False
             ally.attacked_this_turn = False
+            ally.refresh_image()
 
         if Soldier.enemies:
             self._execute_computer_turn()
 
             for enemy in Soldier.enemies:
-                enemy.set_active()
                 enemy.moved_this_turn = False
                 enemy.attacked_this_turn = False
+                enemy.refresh_image()
         else:
             self._summon_next_wave()
 
