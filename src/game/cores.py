@@ -87,11 +87,7 @@ class Soldier(GameObject):
             window=self.healthbar,
         )
 
-        match self.color:
-            case Color.BLUE:
-                Soldier.allies.append(self)
-            case Color.RED:
-                Soldier.enemies.append(self)
+        self._get_friends().append(self)
         Soldier.coordinates.add((self.x, self.y))
 
     def remove_canvas_window_object(self) -> None:
@@ -101,11 +97,7 @@ class Soldier(GameObject):
         Remove self's coordinate from 'Soldier.coordinates'.
         """
         Soldier.coordinates.remove((self.x, self.y))
-        match self.color:
-            case Color.BLUE:
-                Soldier.allies.remove(self)
-            case Color.RED:
-                Soldier.enemies.remove(self)
+        self._get_friends().remove(self)
 
         self._canvas.delete(self._healthbar_id)
         del self._healthbar_id
@@ -207,14 +199,8 @@ class Soldier(GameObject):
         MOVE_THEN_HIT = 2
         MOVE = 3
 
-        match self.color:
-            case Color.BLUE:
-                others = Soldier.enemies
-            case Color.RED:
-                others = Soldier.allies
-
         heap = []
-        for i, other in enumerate(others):
+        for i, other in enumerate(self._get_foes()):
             coordinate = self._get_coordinate_after_moving_toward(other)
             distance = other.get_distance_between(coordinate)
             damage = min(self.attack * (1 + (type(other) in self.counters)) - other.defense, other.health)
@@ -264,15 +250,35 @@ class Soldier(GameObject):
             activebackground=color,
         )
 
+    def _get_friends(self) -> list:
+        """
+        Retrieve friendly Soldier instances based on self.color.
+        """
+        FRIENDS_BY_COLOR = {
+            Color.BLUE: Soldier.allies,
+            Color.RED: Soldier.enemies,
+        }
+        return FRIENDS_BY_COLOR[self.color]
+
+    def _get_foes(self) -> list:
+        """
+        Retrieve hostile Soldier instances based on self.color.
+        """
+        FOES_BY_COLOR = {
+            Color.BLUE: Soldier.enemies,
+            Color.RED: Soldier.allies,
+        }
+        return FOES_BY_COLOR[self.color]
+
     def handle_click_event(self) -> None:
         """
         Call '_handle_ally_click_event' or '_handle_enemy_click_event' based on self's color.
         """
-        match self.color:
-            case Color.BLUE:
-                self._handle_ally_click_event()
-            case Color.RED:
-                self._handle_enemy_click_event()
+        EVENT_HANDLER_BY_COLOR = {
+            Color.BLUE: self._handle_ally_click_event,
+            Color.RED: self._handle_enemy_click_event,
+        }
+        EVENT_HANDLER_BY_COLOR[self.color]()
 
     def _handle_ally_click_event(self) -> None:
         """
