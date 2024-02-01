@@ -3,7 +3,7 @@ from glob import glob
 from pathlib import PurePath
 
 
-class Color:
+class Configuration:
     """
     A class that manages colors.
     """

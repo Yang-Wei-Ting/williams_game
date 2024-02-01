@@ -9,7 +9,8 @@ from tkinter.ttk import Style
 
 from game.controls import EndTurn, Restart
 from game.cores import Archer, Cavalry, Infantry, King
-from game.miscs import Color, Image
+from game.miscs import Configuration as C
+from game.miscs import Image
 
 
 class Program:
@@ -83,13 +84,13 @@ class Program:
         """
         Create initial ally instances.
         """
-        King(self._canvas, 0, -4, color=Color.BLUE)
+        King(self._canvas, 0, -4, color=C.BLUE)
         for coordinate in ((-1, -3), (0, -3), (0, -2), (1, -3)):
-            Infantry(self._canvas, *coordinate, color=Color.BLUE)
+            Infantry(self._canvas, *coordinate, color=C.BLUE)
         for coordinate in ((-2, -4), (-1, -4), (1, -4), (2, -4)):
-            Archer(self._canvas, *coordinate, color=Color.BLUE)
+            Archer(self._canvas, *coordinate, color=C.BLUE)
         for coordinate in ((-3, -4), (-3, -3), (3, -4), (3, -3)):
-            Cavalry(self._canvas, *coordinate, color=Color.BLUE)
+            Cavalry(self._canvas, *coordinate, color=C.BLUE)
 
 
 if __name__ == "__main__":

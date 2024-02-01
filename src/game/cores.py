@@ -6,7 +6,8 @@ from queue import Queue
 from tkinter.ttk import Progressbar
 
 from game.bases import GameObject
-from game.miscs import Color, Image
+from game.miscs import Configuration as C
+from game.miscs import Image
 
 
 class Soldier(GameObject):
@@ -31,7 +32,7 @@ class Soldier(GameObject):
     def counters(self):
         raise NotImplementedError
 
-    def __init__(self, canvas: tk.Canvas, x: int, y: int, *, color: str = Color.RED) -> None:
+    def __init__(self, canvas: tk.Canvas, x: int, y: int, *, color: str = C.RED) -> None:
         """
         Create widget and canvas window object.
         """
@@ -237,11 +238,11 @@ class Soldier(GameObject):
         self.attacked_this_turn, self.color, type of self, and self.level.
         """
         if self.moved_this_turn and self.attacked_this_turn:
-            color = Color.GRAY
+            color = C.GRAY
         else:
             color = self.color
 
-        color_name = Color.COLOR_NAME_BY_HEX_TRIPLET[color]
+        color_name = C.COLOR_NAME_BY_HEX_TRIPLET[color]
         soldier_type = type(self).__name__.lower()
 
         self.config(
@@ -255,8 +256,8 @@ class Soldier(GameObject):
         Retrieve friendly Soldier instances based on self.color.
         """
         FRIENDS_BY_COLOR = {
-            Color.BLUE: Soldier.allies,
-            Color.RED: Soldier.enemies,
+            C.BLUE: Soldier.allies,
+            C.RED: Soldier.enemies,
         }
         return FRIENDS_BY_COLOR[self.color]
 
@@ -265,8 +266,8 @@ class Soldier(GameObject):
         Retrieve hostile Soldier instances based on self.color.
         """
         FOES_BY_COLOR = {
-            Color.BLUE: Soldier.enemies,
-            Color.RED: Soldier.allies,
+            C.BLUE: Soldier.enemies,
+            C.RED: Soldier.allies,
         }
         return FOES_BY_COLOR[self.color]
 
@@ -275,8 +276,8 @@ class Soldier(GameObject):
         Call '_handle_ally_click_event' or '_handle_enemy_click_event' based on self's color.
         """
         EVENT_HANDLER_BY_COLOR = {
-            Color.BLUE: self._handle_ally_click_event,
-            Color.RED: self._handle_enemy_click_event,
+            C.BLUE: self._handle_ally_click_event,
+            C.RED: self._handle_enemy_click_event,
         }
         EVENT_HANDLER_BY_COLOR[self.color]()
 
