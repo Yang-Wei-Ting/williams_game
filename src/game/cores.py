@@ -7,7 +7,7 @@ from tkinter.ttk import Progressbar
 
 from game.bases import GameObject
 from game.miscs import Configuration as C
-from game.miscs import Image
+from game.miscs import Image, get_pixels
 
 
 class Soldier(GameObject):
@@ -78,13 +78,11 @@ class Soldier(GameObject):
         Add self's coordinate to 'Soldier.coordinates'.
         """
         self._main_widget_id = self._canvas.create_window(
-            self.x * 60 + 390,
-            -self.y * 60 + 395,
+            *get_pixels(self.x, self.y, y_pixel_shift=5.0),
             window=self,
         )
         self._healthbar_id = self._canvas.create_window(
-            self.x * 60 + 390,
-            -self.y * 60 + 367.5,
+            *get_pixels(self.x, self.y, y_pixel_shift=-22.5),
             window=self.healthbar,
         )
 
@@ -113,8 +111,8 @@ class Soldier(GameObject):
         Soldier.coordinates.remove((self.x, self.y))
         self.x = x
         self.y = y
-        self._canvas.coords(self._main_widget_id, self.x * 60 + 390, -self.y * 60 + 395)
-        self._canvas.coords(self._healthbar_id, self.x * 60 + 390, -self.y * 60 + 367.5)
+        self._canvas.coords(self._main_widget_id, *get_pixels(self.x, self.y, y_pixel_shift=5.0))
+        self._canvas.coords(self._healthbar_id, *get_pixels(self.x, self.y, y_pixel_shift=-22.5))
         Soldier.coordinates.add((self.x, self.y))
 
         self.moved_this_turn = True
@@ -475,8 +473,7 @@ class AttackRange(GameObject):
         Create canvas window object and set 'AttackRange.instance' to self.
         """
         self._main_widget_id = self._canvas.create_image(
-            self.x * 60 + 390,
-            -self.y * 60 + 390,
+            *get_pixels(self.x, self.y),
             image=getattr(Image, "red_diamond_{0}x{0}".format(self._half_diagonal * 120)),
         )
         AttackRange.instance = self

@@ -1,6 +1,8 @@
 import tkinter as tk
 from abc import ABC, abstractmethod
 
+from game.miscs import get_pixels
+
 
 class GameObject(tk.Button, ABC):
     """
@@ -35,11 +37,7 @@ class GameObject(tk.Button, ABC):
         """
         Create canvas window object.
         """
-        self._main_widget_id = self._canvas.create_window(
-            self.x * 60 + 390,
-            -self.y * 60 + 390,
-            window=self,
-        )
+        self._main_widget_id = self._canvas.create_window(*get_pixels(self.x, self.y), window=self)
 
     def remove_canvas_window_object(self) -> None:
         """
