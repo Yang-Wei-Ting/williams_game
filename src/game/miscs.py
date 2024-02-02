@@ -37,6 +37,6 @@ def get_pixels(x: int, y: int, *, x_pixel_shift: float = 0.0, y_pixel_shift: flo
     Compute pixels from coordinates and custom pixel shifts.
     """
     return (
-        60 * x + 390 + x_pixel_shift,
-        60 * -y + 390 + y_pixel_shift,
+        60 * (x + 1.5) + x_pixel_shift,
+        60 * (y + 0.5) + y_pixel_shift,
     )

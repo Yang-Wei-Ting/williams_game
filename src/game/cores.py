@@ -178,8 +178,8 @@ class Soldier(GameObject):
             for dx, dy in {(1, 0), (0, 1), (-1, 0), (0, -1)}:
                 x, y = current[0] + dx, current[1] + dy
                 if (
-                    -5 <= x <= 5 and
-                    -5 <= y <= 6 and
+                    0 <= x <= 10 and
+                    0 <= y <= 11 and
                     (x, y) not in Soldier.coordinates and
                     ((x, y) not in cost_table or new_cost < cost_table[(x, y)])
                 ):
@@ -316,8 +316,8 @@ class Soldier(GameObject):
                     for dx, dy in {(1, 0), (0, 1), (-1, 0), (0, -1)}:
                         x, y = current[0] + dx, current[1] + dy
                         if (
-                            -5 <= x <= 5 and
-                            -5 <= y <= 3 and
+                            0 <= x <= 10 and
+                            3 <= y <= 11 and
                             (x, y) not in Soldier.coordinates and
                             (x, y) not in cost_table and
                             new_cost <= self.mobility
