@@ -5,7 +5,7 @@ from pathlib import PurePath
 
 class Configuration:
     """
-    A class that manages colors.
+    A class that manages colors and dimensional settings.
     """
 
     BLUE = "#043E6F"
@@ -16,6 +16,15 @@ class Configuration:
         GRAY: "gray",
         RED: "red",
     }
+
+    TILE_DIMENSION = 60  # pixels
+    HORIZONTAL_LAND_TILE_COUNT = 11
+    HORIZONTAL_SHORE_TILE_COUNT = 1
+    HORIZONTAL_OCEAN_TILE_COUNT = 2
+    HORIZONTAL_TILE_COUNT = (
+        HORIZONTAL_LAND_TILE_COUNT + HORIZONTAL_SHORE_TILE_COUNT + HORIZONTAL_OCEAN_TILE_COUNT
+    )
+    VERTICAL_TILE_COUNT = 12
 
 
 class Image:
@@ -37,6 +46,6 @@ def get_pixels(x: int, y: int, *, x_pixel_shift: float = 0.0, y_pixel_shift: flo
     Compute pixels from coordinates and custom pixel shifts.
     """
     return (
-        60 * (x + 1.5) + x_pixel_shift,
-        60 * (y + 0.5) + y_pixel_shift,
+        Configuration.TILE_DIMENSION * (x + 0.5) + x_pixel_shift,
+        Configuration.TILE_DIMENSION * (y + 0.5) + y_pixel_shift,
     )
