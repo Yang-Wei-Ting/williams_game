@@ -26,10 +26,6 @@ class Soldier(GameObject):
     health = 70
     mobility = 2
 
-    level = 1
-    experience = 0
-    PROMOTION_EXPERIENCE = {1: 4, 2: 8, 3: 16, 4: 32, 5: math.inf}
-
     @property
     @abstractmethod
     def counters(self):
@@ -40,9 +36,26 @@ class Soldier(GameObject):
         Create widget and canvas window object.
         """
         self.color = color
+        self.level = 1
+        self.experience = 0
         self.moved_this_turn = False
         self.attacked_this_turn = False
         super().__init__(canvas, x, y)
+
+    def _create_widget(self) -> None:
+        """
+        Create widget.
+        """
+        super()._create_widget()
+        self.healthbar = Progressbar(
+            self._canvas,
+            length=self.health / 2,
+            maximum=self.health,
+            mode="determinate",
+            orient=tk.HORIZONTAL,
+            style="TProgressbar",
+            value=self.health,
+        )
 
     def _configure_widget(self) -> None:
         """
@@ -71,16 +84,6 @@ class Soldier(GameObject):
             -self.y * 60 + 395,
             window=self,
         )
-
-        self.healthbar = Progressbar(
-            self._canvas,
-            length=self.health / 2,
-            maximum=self.health,
-            mode="determinate",
-            orient=tk.HORIZONTAL,
-            style="TProgressbar",
-            value=self.health,
-        )
         self._healthbar_id = self._canvas.create_window(
             self.x * 60 + 390,
             -self.y * 60 + 367.5,
@@ -100,19 +103,17 @@ class Soldier(GameObject):
         Remove self from 'Soldier.allies' or 'Soldier.enemies'.
         Remove self's coordinate from 'Soldier.coordinates'.
         """
-        super().remove_canvas_window_object()
-
-        if hasattr(self, "_healthbar_id"):
-            self._canvas.delete(self._healthbar_id)
-            delattr(self, "_healthbar_id")
-            delattr(self, "healthbar")
-
+        Soldier.coordinates.remove((self.x, self.y))
         match self.color:
             case Color.BLUE:
                 Soldier.allies.remove(self)
             case Color.RED:
                 Soldier.enemies.remove(self)
-        Soldier.coordinates.remove((self.x, self.y))
+
+        self._canvas.delete(self._healthbar_id)
+        del self._healthbar_id
+        del self.healthbar
+        super().remove_canvas_window_object()
 
     def move_to(self, x: int, y: int) -> None:
         """
@@ -152,8 +153,9 @@ class Soldier(GameObject):
         """
         self.experience += experience
 
-        while self.experience >= self.PROMOTION_EXPERIENCE[self.level]:
-            self.experience -= self.PROMOTION_EXPERIENCE[self.level]
+        LEVEL_UP_EXPERIENCE_BY_LEVEL = {1: 4, 2: 8, 3: 16, 4: 32, 5: math.inf}
+        while self.experience >= LEVEL_UP_EXPERIENCE_BY_LEVEL[self.level]:
+            self.experience -= LEVEL_UP_EXPERIENCE_BY_LEVEL[self.level]
             self.level += 1
             self.attack += 3
             self.defense += 2
@@ -163,7 +165,7 @@ class Soldier(GameObject):
         name = f"{color}_{self.__class__.__name__.lower()}_{self.level}"
         self.config(image=getattr(Image, name))
 
-    def get_coordinate_after_moving_toward(self, other) -> tuple:
+    def _get_coordinate_after_moving_toward(self, other) -> tuple:
         """
         Use the A* pathfinding algorithm to compute the shortest path for self
         to move toward other until other is within self's attack range.
@@ -220,7 +222,7 @@ class Soldier(GameObject):
 
         heap = []
         for i, other in enumerate(others):
-            coordinate = self.get_coordinate_after_moving_toward(other)
+            coordinate = self._get_coordinate_after_moving_toward(other)
             distance = other.get_distance_between(coordinate)
             damage = min(self.attack * (1 + (type(other) in self.counters)) - other.defense, other.health)
 
@@ -352,13 +354,13 @@ class King(Soldier):
 
     @property
     def counters(self):
-        return {King, Bowman, Horseman, Swordsman}
+        return {King, Archer, Cavalry, Infantry}
 
 
-class Bowman(Soldier):
+class Archer(Soldier):
     """
     Soldier with high attack range but low attack and low health.
-    Counter swordsmen, countered by horsemen.
+    Counter infantries, countered by cavalries.
     """
 
     attack = 25
@@ -367,33 +369,33 @@ class Bowman(Soldier):
 
     @property
     def counters(self):
-        return {Swordsman}
+        return {Infantry}
 
 
-class Horseman(Soldier):
+class Cavalry(Soldier):
     """
     Soldier with high mobility.
-    Counter bowmen, countered by swordsmen.
+    Counter archers, countered by infantries.
     """
 
     mobility = 3
 
     @property
     def counters(self):
-        return {Bowman}
+        return {Archer}
 
 
-class Swordsman(Soldier):
+class Infantry(Soldier):
     """
     Soldier with high defense.
-    Counter horsemen, countered by bowmen.
+    Counter cavalries, countered by archers.
     """
 
     defense = 20
 
     @property
     def counters(self):
-        return {Horseman}
+        return {Cavalry}
 
 
 class Movement(GameObject):
