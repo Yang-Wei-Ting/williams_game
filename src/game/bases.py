@@ -37,7 +37,7 @@ class GameObject(tk.Button, ABC):
         """
         self._main_widget_id = self._canvas.create_window(
             self.x * 60 + 390,
-            -self.y * 60 + 395,
+            -self.y * 60 + 390,
             window=self,
         )
 
@@ -55,7 +55,7 @@ class GameObject(tk.Button, ABC):
         """
         self.x = x
         self.y = y
-        self._canvas.coords(self._main_widget_id, self.x * 60 + 390, -self.y * 60 + 395)
+        self._canvas.coords(self._main_widget_id, self.x * 60 + 390, -self.y * 60 + 390)
 
     def get_distance_between(self, other) -> int:
         """

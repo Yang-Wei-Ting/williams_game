@@ -66,7 +66,11 @@ class Soldier(GameObject):
         Add self to 'Soldier.allies' or 'Soldier.enemies'.
         Add self's coordinate to 'Soldier.coordinates'.
         """
-        super()._create_canvas_window_object()
+        self._main_widget_id = self._canvas.create_window(
+            self.x * 60 + 390,
+            -self.y * 60 + 395,
+            window=self,
+        )
 
         self.healthbar = Progressbar(
             self._canvas,
@@ -116,8 +120,10 @@ class Soldier(GameObject):
         Update 'Soldier.coordinates' to reflect self's coordinate change.
         """
         Soldier.coordinates.remove((self.x, self.y))
-        super().move_to(x, y)
-        self._canvas.coords(self._healthbar_id, self.x * 60 + 390, -self.y * 60 + 365)
+        self.x = x
+        self.y = y
+        self._canvas.coords(self._main_widget_id, self.x * 60 + 390, -self.y * 60 + 395)
+        self._canvas.coords(self._healthbar_id, self.x * 60 + 390, -self.y * 60 + 367.5)
         Soldier.coordinates.add((self.x, self.y))
 
         self.moved_this_turn = True
@@ -467,7 +473,7 @@ class AttackRange(GameObject):
         """
         self._main_widget_id = self._canvas.create_image(
             self.x * 60 + 390,
-            -self.y * 60 + 395,
+            -self.y * 60 + 390,
             image=getattr(Image, "red_diamond_{0}x{0}".format(self._half_diagonal * 120)),
         )
         AttackRange.instance = self
