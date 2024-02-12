@@ -8,18 +8,13 @@ from tkinter.ttk import Progressbar
 from game.bases import GameObject
 from game.miscs import Configuration as C
 from game.miscs import Image, get_pixels
+from game.states import AttackRangeState, GameState, MovementState, SoldierState
 
 
 class Soldier(GameObject):
     """
     An abstract base class for all soldier game objects.
-    This class keeps tracks of all its derived class instances and their coordinates.
     """
-
-    allies = []
-    enemies = []
-    coordinates = set()
-    chosen_ally = None
 
     attack = 30
     attack_range = 1
@@ -74,8 +69,8 @@ class Soldier(GameObject):
     def _create_canvas_window_object(self) -> None:
         """
         Create canvas window object.
-        Add self to 'Soldier.allies' or 'Soldier.enemies'.
-        Add self's coordinate to 'Soldier.coordinates'.
+        Add self to 'SoldierState.allies' or 'SoldierState.enemies'.
+        Add self's coordinate to 'GameState.occupied_coordinates'.
         """
         self._main_widget_id = self._canvas.create_window(
             *get_pixels(self.x, self.y, y_pixel_shift=5.0),
@@ -87,15 +82,15 @@ class Soldier(GameObject):
         )
 
         self._get_friends().append(self)
-        Soldier.coordinates.add((self.x, self.y))
+        GameState.occupied_coordinates.add((self.x, self.y))
 
     def remove_canvas_window_object(self) -> None:
         """
         Remove canvas window object.
-        Remove self from 'Soldier.allies' or 'Soldier.enemies'.
-        Remove self's coordinate from 'Soldier.coordinates'.
+        Remove self from 'SoldierState.allies' or 'SoldierState.enemies'.
+        Remove self's coordinate from 'GameState.occupied_coordinates'.
         """
-        Soldier.coordinates.remove((self.x, self.y))
+        GameState.occupied_coordinates.remove((self.x, self.y))
         self._get_friends().remove(self)
 
         self._canvas.delete(self._healthbar_id)
@@ -106,14 +101,14 @@ class Soldier(GameObject):
     def move_to(self, x: int, y: int) -> None:
         """
         Move self to the new coordinate and update canvas window object's coordinate.
-        Update 'Soldier.coordinates' to reflect self's coordinate change.
+        Update 'GameState.occupied_coordinates' to reflect self's coordinate change.
         """
-        Soldier.coordinates.remove((self.x, self.y))
+        GameState.occupied_coordinates.remove((self.x, self.y))
         self.x = x
         self.y = y
         self._canvas.coords(self._main_widget_id, *get_pixels(self.x, self.y, y_pixel_shift=5.0))
         self._canvas.coords(self._healthbar_id, *get_pixels(self.x, self.y, y_pixel_shift=-22.5))
-        Soldier.coordinates.add((self.x, self.y))
+        GameState.occupied_coordinates.add((self.x, self.y))
 
         self.moved_this_turn = True
         self.refresh_image()
@@ -180,7 +175,7 @@ class Soldier(GameObject):
                 if (
                     0 <= x <= 10 and
                     0 <= y <= 11 and
-                    (x, y) not in Soldier.coordinates and
+                    (x, y) not in GameState.occupied_coordinates and
                     ((x, y) not in cost_table or new_cost < cost_table[(x, y)])
                 ):
                     heapq.heappush(frontier, (new_cost + other.get_distance_between((x, y)), (x, y)))
@@ -254,8 +249,8 @@ class Soldier(GameObject):
         Retrieve friendly Soldier instances based on self.color.
         """
         FRIENDS_BY_COLOR = {
-            C.BLUE: Soldier.allies,
-            C.RED: Soldier.enemies,
+            C.BLUE: SoldierState.allies,
+            C.RED: SoldierState.enemies,
         }
         return FRIENDS_BY_COLOR[self.color]
 
@@ -264,8 +259,8 @@ class Soldier(GameObject):
         Retrieve hostile Soldier instances based on self.color.
         """
         FOES_BY_COLOR = {
-            C.BLUE: Soldier.enemies,
-            C.RED: Soldier.allies,
+            C.BLUE: SoldierState.enemies,
+            C.RED: SoldierState.allies,
         }
         return FOES_BY_COLOR[self.color]
 
@@ -285,21 +280,21 @@ class Soldier(GameObject):
         or hide attack range indicator.
         If another ally instance is chosen, unselect it first.
         """
-        if Soldier.chosen_ally:
-            if Soldier.chosen_ally is self:
-                Soldier.chosen_ally = None
+        if SoldierState.chosen_ally:
+            if SoldierState.chosen_ally is self:
+                SoldierState.chosen_ally = None
 
-                if AttackRange.instance:
-                    AttackRange.instance.remove_canvas_window_object()
+                if AttackRangeState.instance:
+                    AttackRangeState.instance.remove_canvas_window_object()
 
-                for highlight in Movement.instances:
+                for highlight in MovementState.instances:
                     GameObject.remove_canvas_window_object(highlight)
-                Movement.instances = []
+                MovementState.instances = []
             else:
-                Soldier.chosen_ally.handle_click_event()
+                SoldierState.chosen_ally.handle_click_event()
                 self.handle_click_event()
         else:
-            Soldier.chosen_ally = self
+            SoldierState.chosen_ally = self
 
             if not self.attacked_this_turn:
                 AttackRange(self._canvas, self.x, self.y, half_diagonal=self.attack_range)
@@ -318,7 +313,7 @@ class Soldier(GameObject):
                         if (
                             0 <= x <= 10 and
                             3 <= y <= 11 and
-                            (x, y) not in Soldier.coordinates and
+                            (x, y) not in GameState.occupied_coordinates and
                             (x, y) not in cost_table and
                             new_cost <= self.mobility
                         ):
@@ -330,7 +325,7 @@ class Soldier(GameObject):
         """
         Attack self with the chosen ally instance.
         """
-        chosen_ally = Soldier.chosen_ally
+        chosen_ally = SoldierState.chosen_ally
 
         if (
             chosen_ally
@@ -403,8 +398,6 @@ class Movement(GameObject):
     When a movement is clicked on, the chosen ally instance moves to its coordinate.
     """
 
-    instances = []
-
     def _configure_widget(self) -> None:
         """
         Configure widget.
@@ -422,25 +415,25 @@ class Movement(GameObject):
 
     def _create_canvas_window_object(self) -> None:
         """
-        Create canvas window object and append self to 'Movement.instances'.
+        Create canvas window object and append self to 'MovementState.instances'.
         """
         super()._create_canvas_window_object()
-        Movement.instances.append(self)
+        MovementState.instances.append(self)
 
     def remove_canvas_window_object(self) -> None:
         """
-        Remove canvas window object and remove self from 'Movement.instances'.
+        Remove canvas window object and remove self from 'MovementState.instances'.
         """
         super().remove_canvas_window_object()
-        Movement.instances.remove(self)
+        MovementState.instances.remove(self)
 
     def handle_click_event(self) -> None:
         """
         Move the chosen ally instance to the coordinate of the clicked movement.
         Unselect the ally instance then clear all highlights.
         """
-        Soldier.chosen_ally.move_to(self.x, self.y)
-        Soldier.chosen_ally.handle_click_event()
+        SoldierState.chosen_ally.move_to(self.x, self.y)
+        SoldierState.chosen_ally.handle_click_event()
 
 
 class AttackRange(GameObject):
@@ -448,8 +441,6 @@ class AttackRange(GameObject):
     A class that instantiates attack range indicators which indicate ally instances' attack range.
     Enemy instances can be attacked when they are covered by an attack range indicator.
     """
-
-    instance = None
 
     def __init__(self, canvas: tk.Canvas, x: int, y: int, *, half_diagonal: int) -> None:
         """
@@ -470,17 +461,17 @@ class AttackRange(GameObject):
 
     def _create_canvas_window_object(self) -> None:
         """
-        Create canvas window object and set 'AttackRange.instance' to self.
+        Create canvas window object and set 'AttackRangeState.instance' to self.
         """
         self._main_widget_id = self._canvas.create_image(
             *get_pixels(self.x, self.y),
             image=getattr(Image, "red_diamond_{0}x{0}".format(self._half_diagonal * 120)),
         )
-        AttackRange.instance = self
+        AttackRangeState.instance = self
 
     def remove_canvas_window_object(self) -> None:
         """
-        Remove canvas window object and set 'AttackRange.instance' to None.
+        Remove canvas window object and set 'AttackRangeState.instance' to None.
         """
         super().remove_canvas_window_object()
-        AttackRange.instance = None
+        AttackRangeState.instance = None

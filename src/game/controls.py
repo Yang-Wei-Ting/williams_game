@@ -5,9 +5,10 @@ from abc import abstractmethod
 from random import choice, sample
 
 from game.bases import GameObject
-from game.cores import Archer, Cavalry, Infantry, King, Soldier
+from game.cores import Archer, Cavalry, Infantry, King
 from game.miscs import Configuration as C
 from game.miscs import Image
+from game.states import SoldierState
 
 
 class Control(GameObject):
@@ -89,18 +90,18 @@ class EndTurn(Control):
         If there's any enemy instance left, execute computer's turn then activate
         all enemy instances. Otherwise, summon next enemy wave.
         """
-        if Soldier.chosen_ally:
-            Soldier.chosen_ally.handle_click_event()
+        if SoldierState.chosen_ally:
+            SoldierState.chosen_ally.handle_click_event()
 
-        for ally in Soldier.allies:
+        for ally in SoldierState.allies:
             ally.moved_this_turn = False
             ally.attacked_this_turn = False
             ally.refresh_image()
 
-        if Soldier.enemies:
+        if SoldierState.enemies:
             self._execute_computer_turn()
 
-            for enemy in Soldier.enemies:
+            for enemy in SoldierState.enemies:
                 enemy.moved_this_turn = False
                 enemy.attacked_this_turn = False
                 enemy.refresh_image()
@@ -112,14 +113,14 @@ class EndTurn(Control):
         Execute each enemy's turn.
         If there is no ally instance, display defeat pop-up.
         """
-        if not Soldier.allies:
+        if not SoldierState.allies:
             self._display_popup("defeat")
             return
 
-        for enemy in sample(Soldier.enemies, len(Soldier.enemies)):
+        for enemy in sample(SoldierState.enemies, len(SoldierState.enemies)):
             enemy.hunt()
 
-            if not Soldier.allies:
+            if not SoldierState.allies:
                 self._display_popup("defeat")
                 break
 
@@ -133,7 +134,7 @@ class EndTurn(Control):
         except StopIteration:
             self._display_popup("victory")
         else:
-            for ally in Soldier.allies:
+            for ally in SoldierState.allies:
                 ally.heal_itself(40)
 
     def _display_popup(self, image_name: str) -> None:
