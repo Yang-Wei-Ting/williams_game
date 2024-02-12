@@ -8,9 +8,9 @@ from random import choices
 from tkinter.ttk import Style
 
 from game.controls import EndTurn, Restart
-from game.cores import Archer, Cavalry, Infantry, King
 from game.miscs import Configuration as C
 from game.miscs import Image, get_pixels
+from game.soldiers import Archer, Cavalry, Infantry, King
 
 
 class Program:

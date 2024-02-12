@@ -5,9 +5,9 @@ from abc import abstractmethod
 from random import choice, sample
 
 from game.bases import GameObject
-from game.cores import Archer, Cavalry, Infantry, King
 from game.miscs import Configuration as C
 from game.miscs import Image
+from game.soldiers import Archer, Cavalry, Infantry, King
 from game.states import SoldierState
 
 
