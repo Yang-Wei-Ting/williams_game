@@ -6,7 +6,8 @@ from queue import Queue
 from tkinter.ttk import Progressbar
 
 from game.bases import GameObject
-from game.miscs import Color, Image
+from game.miscs import Configuration as C
+from game.miscs import Image, get_pixels
 
 
 class Soldier(GameObject):
@@ -31,7 +32,7 @@ class Soldier(GameObject):
     def counters(self):
         raise NotImplementedError
 
-    def __init__(self, canvas: tk.Canvas, x: int, y: int, *, color: str = Color.RED) -> None:
+    def __init__(self, canvas: tk.Canvas, x: int, y: int, *, color: str = C.RED) -> None:
         """
         Create widget and canvas window object.
         """
@@ -61,17 +62,14 @@ class Soldier(GameObject):
         """
         Configure widget.
         """
-        name = f"{Color.MAPPING[self.color]}_{self.__class__.__name__.lower()}_{self.level}"
         self.configure(
-            image=getattr(Image, name),
-            background=self.color,
-            activebackground=self.color,
             relief=tk.RAISED,
             borderwidth=5,
             highlightthickness=0,
             cursor="hand2",
             command=self.handle_click_event,
         )
+        self.refresh_image()
 
     def _create_canvas_window_object(self) -> None:
         """
@@ -80,21 +78,15 @@ class Soldier(GameObject):
         Add self's coordinate to 'Soldier.coordinates'.
         """
         self._main_widget_id = self._canvas.create_window(
-            self.x * 60 + 390,
-            -self.y * 60 + 395,
+            *get_pixels(self.x, self.y, y_pixel_shift=5.0),
             window=self,
         )
         self._healthbar_id = self._canvas.create_window(
-            self.x * 60 + 390,
-            -self.y * 60 + 367.5,
+            *get_pixels(self.x, self.y, y_pixel_shift=-22.5),
             window=self.healthbar,
         )
 
-        match self.color:
-            case Color.BLUE:
-                Soldier.allies.append(self)
-            case Color.RED:
-                Soldier.enemies.append(self)
+        self._get_friends().append(self)
         Soldier.coordinates.add((self.x, self.y))
 
     def remove_canvas_window_object(self) -> None:
@@ -104,11 +96,7 @@ class Soldier(GameObject):
         Remove self's coordinate from 'Soldier.coordinates'.
         """
         Soldier.coordinates.remove((self.x, self.y))
-        match self.color:
-            case Color.BLUE:
-                Soldier.allies.remove(self)
-            case Color.RED:
-                Soldier.enemies.remove(self)
+        self._get_friends().remove(self)
 
         self._canvas.delete(self._healthbar_id)
         del self._healthbar_id
@@ -123,13 +111,12 @@ class Soldier(GameObject):
         Soldier.coordinates.remove((self.x, self.y))
         self.x = x
         self.y = y
-        self._canvas.coords(self._main_widget_id, self.x * 60 + 390, -self.y * 60 + 395)
-        self._canvas.coords(self._healthbar_id, self.x * 60 + 390, -self.y * 60 + 367.5)
+        self._canvas.coords(self._main_widget_id, *get_pixels(self.x, self.y, y_pixel_shift=5.0))
+        self._canvas.coords(self._healthbar_id, *get_pixels(self.x, self.y, y_pixel_shift=-22.5))
         Soldier.coordinates.add((self.x, self.y))
 
         self.moved_this_turn = True
-        if self.attacked_this_turn:
-            self.set_inactive()
+        self.refresh_image()
 
     def assault(self, other) -> None:
         """
@@ -145,8 +132,7 @@ class Soldier(GameObject):
             self.experience += 1
 
         self.attacked_this_turn = True
-        if self.moved_this_turn:
-            self.set_inactive()
+        self.refresh_image()
 
     def promote(self, experience: int = 0) -> None:
         """
@@ -161,9 +147,7 @@ class Soldier(GameObject):
             self.defense += 2
             self.heal_itself(10)
 
-        color = "gray" if self.moved_this_turn and self.attacked_this_turn else Color.MAPPING[self.color]
-        name = f"{color}_{self.__class__.__name__.lower()}_{self.level}"
-        self.config(image=getattr(Image, name))
+        self.refresh_image()
 
     def _get_coordinate_after_moving_toward(self, other) -> tuple:
         """
@@ -194,8 +178,8 @@ class Soldier(GameObject):
             for dx, dy in {(1, 0), (0, 1), (-1, 0), (0, -1)}:
                 x, y = current[0] + dx, current[1] + dy
                 if (
-                    -5 <= x <= 5 and
-                    -5 <= y <= 6 and
+                    0 <= x <= 10 and
+                    0 <= y <= 11 and
                     (x, y) not in Soldier.coordinates and
                     ((x, y) not in cost_table or new_cost < cost_table[(x, y)])
                 ):
@@ -214,14 +198,8 @@ class Soldier(GameObject):
         MOVE_THEN_HIT = 2
         MOVE = 3
 
-        match self.color:
-            case Color.BLUE:
-                others = Soldier.enemies
-            case Color.RED:
-                others = Soldier.allies
-
         heap = []
-        for i, other in enumerate(others):
+        for i, other in enumerate(self._get_foes()):
             coordinate = self._get_coordinate_after_moving_toward(other)
             distance = other.get_distance_between(coordinate)
             damage = min(self.attack * (1 + (type(other) in self.counters)) - other.defense, other.health)
@@ -252,37 +230,54 @@ class Soldier(GameObject):
         self.health = min(self.health + amount, self.__class__.health)
         self.healthbar["value"] = self.health
 
-    def set_inactive(self) -> None:
+    def refresh_image(self) -> None:
         """
-        Change widget's color into gray.
+        Update image, background, and activebackground values based on self.moved_this_turn,
+        self.attacked_this_turn, self.color, type of self, and self.level.
         """
-        name = f"gray_{self.__class__.__name__.lower()}_{self.level}"
+        if self.moved_this_turn and self.attacked_this_turn:
+            color = C.GRAY
+        else:
+            color = self.color
+
+        color_name = C.COLOR_NAME_BY_HEX_TRIPLET[color]
+        soldier_type = type(self).__name__.lower()
+
         self.config(
-            image=getattr(Image, name),
-            background=Color.GRAY,
-            activebackground=Color.GRAY,
+            image=getattr(Image, f"{color_name}_{soldier_type}_{self.level}"),
+            background=color,
+            activebackground=color,
         )
 
-    def set_active(self) -> None:
+    def _get_friends(self) -> list:
         """
-        Reset widget's color.
+        Retrieve friendly Soldier instances based on self.color.
         """
-        name = f"{Color.MAPPING[self.color]}_{self.__class__.__name__.lower()}_{self.level}"
-        self.config(
-            image=getattr(Image, name),
-            background=self.color,
-            activebackground=self.color,
-        )
+        FRIENDS_BY_COLOR = {
+            C.BLUE: Soldier.allies,
+            C.RED: Soldier.enemies,
+        }
+        return FRIENDS_BY_COLOR[self.color]
+
+    def _get_foes(self) -> list:
+        """
+        Retrieve hostile Soldier instances based on self.color.
+        """
+        FOES_BY_COLOR = {
+            C.BLUE: Soldier.enemies,
+            C.RED: Soldier.allies,
+        }
+        return FOES_BY_COLOR[self.color]
 
     def handle_click_event(self) -> None:
         """
         Call '_handle_ally_click_event' or '_handle_enemy_click_event' based on self's color.
         """
-        match self.color:
-            case Color.BLUE:
-                self._handle_ally_click_event()
-            case Color.RED:
-                self._handle_enemy_click_event()
+        EVENT_HANDLER_BY_COLOR = {
+            C.BLUE: self._handle_ally_click_event,
+            C.RED: self._handle_enemy_click_event,
+        }
+        EVENT_HANDLER_BY_COLOR[self.color]()
 
     def _handle_ally_click_event(self) -> None:
         """
@@ -321,8 +316,8 @@ class Soldier(GameObject):
                     for dx, dy in {(1, 0), (0, 1), (-1, 0), (0, -1)}:
                         x, y = current[0] + dx, current[1] + dy
                         if (
-                            -5 <= x <= 5 and
-                            -5 <= y <= 3 and
+                            0 <= x <= 10 and
+                            3 <= y <= 11 and
                             (x, y) not in Soldier.coordinates and
                             (x, y) not in cost_table and
                             new_cost <= self.mobility
@@ -478,8 +473,7 @@ class AttackRange(GameObject):
         Create canvas window object and set 'AttackRange.instance' to self.
         """
         self._main_widget_id = self._canvas.create_image(
-            self.x * 60 + 390,
-            -self.y * 60 + 390,
+            *get_pixels(self.x, self.y),
             image=getattr(Image, "red_diamond_{0}x{0}".format(self._half_diagonal * 120)),
         )
         AttackRange.instance = self

@@ -92,17 +92,17 @@ class EndTurn(Control):
             Soldier.chosen_ally.handle_click_event()
 
         for ally in Soldier.allies:
-            ally.set_active()
             ally.moved_this_turn = False
             ally.attacked_this_turn = False
+            ally.refresh_image()
 
         if Soldier.enemies:
             self._execute_computer_turn()
 
             for enemy in Soldier.enemies:
-                enemy.set_active()
                 enemy.moved_this_turn = False
                 enemy.attacked_this_turn = False
+                enemy.refresh_image()
         else:
             self._summon_next_wave()
 
@@ -147,51 +147,51 @@ class EndTurn(Control):
         Lazily create enemy waves.
         """
         # Wave 1
-        for x in range(-1, 2):
-            Archer(self._canvas, x, 6)
+        for x in range(4, 7):
+            Archer(self._canvas, x, 0)
         yield
 
         # Wave 2
-        for x in range(-2, 3):
-            Cavalry(self._canvas, x, 6)
+        for x in range(3, 8):
+            Cavalry(self._canvas, x, 0)
         yield
 
         # Wave 3
-        for x in range(-3, 4):
-            Infantry(self._canvas, x, 6)
+        for x in range(2, 9):
+            Infantry(self._canvas, x, 0)
         yield
 
         # Wave 4
-        for x in range(-5, 6):
-            choice([Archer, Cavalry, Infantry])(self._canvas, x, 6).promote(4)
+        for x in range(0, 11):
+            choice([Archer, Cavalry, Infantry])(self._canvas, x, 0).promote(4)
         yield
 
         # Wave 5
-        for x in range(-5, 6):
-            choice([Archer, Cavalry, Infantry])(self._canvas, x, 6).promote(4)
-        for x in range(-2, 3):
-            choice([Archer, Cavalry, Infantry])(self._canvas, x, 5).promote(4)
+        for x in range(0, 11):
+            choice([Archer, Cavalry, Infantry])(self._canvas, x, 0).promote(4)
+        for x in range(3, 8):
+            choice([Archer, Cavalry, Infantry])(self._canvas, x, 1).promote(4)
         yield
 
         # Wave 6
-        for x in range(-3, 4):
-            Archer(self._canvas, x, 6)
-            Infantry(self._canvas, x, 5).promote(12)
-        for x in (-5, -4, 4, 5):
-            for y in (5, 6):
+        for x in range(2, 9):
+            Archer(self._canvas, x, 0)
+            Infantry(self._canvas, x, 1).promote(12)
+        for x in (0, 1, 9, 10):
+            for y in (0, 1):
                 Cavalry(self._canvas, x, y).promote(12)
         yield
 
         # Wave 7
-        for x in range(-3, 4):
-            for y in (5, 6):
+        for x in range(2, 9):
+            for y in (0, 1):
                 Archer(self._canvas, x, y)
-        for x in (-5, -4, 4, 5):
-            for y in range(4, 7):
+        for x in (0, 1, 9, 10):
+            for y in range(0, 3):
                 Cavalry(self._canvas, x, y).promote(12)
-        for x in (-3, -2, -1, 1, 2, 3):
-            Infantry(self._canvas, x, 4).promote(12)
-        King(self._canvas, 0, 4).promote(60)
+        for x in (2, 3, 4, 6, 7, 8):
+            Infantry(self._canvas, x, 2).promote(12)
+        King(self._canvas, 5, 2).promote(60)
         yield
 
 

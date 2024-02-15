@@ -9,7 +9,8 @@ from tkinter.ttk import Style
 
 from game.controls import EndTurn, Restart
 from game.cores import Archer, Cavalry, Infantry, King
-from game.miscs import Color, Image
+from game.miscs import Configuration as C
+from game.miscs import Image
 
 
 class Program:
@@ -36,8 +37,8 @@ class Program:
 
         Image.initialize()
 
-        self._end_turn_button = EndTurn(self._canvas, 4.75, -5.9)
-        self._restart_button = Restart(self._canvas, -4.75, -5.9, window=self._window)
+        self._end_turn_button = EndTurn(self._canvas, 9.75, 11.9)
+        self._restart_button = Restart(self._canvas, 0.25, 11.9, window=self._window)
 
         self._create_landscape()
 
@@ -83,13 +84,13 @@ class Program:
         """
         Create initial ally instances.
         """
-        King(self._canvas, 0, -4, color=Color.BLUE)
-        for coordinate in ((-1, -3), (0, -3), (0, -2), (1, -3)):
-            Infantry(self._canvas, *coordinate, color=Color.BLUE)
-        for coordinate in ((-2, -4), (-1, -4), (1, -4), (2, -4)):
-            Archer(self._canvas, *coordinate, color=Color.BLUE)
-        for coordinate in ((-3, -4), (-3, -3), (3, -4), (3, -3)):
-            Cavalry(self._canvas, *coordinate, color=Color.BLUE)
+        King(self._canvas, 5, 10, color=C.BLUE)
+        for coordinate in ((4, 9), (5, 9), (5, 8), (6, 9)):
+            Infantry(self._canvas, *coordinate, color=C.BLUE)
+        for coordinate in ((3, 10), (4, 10), (6, 10), (7, 10)):
+            Archer(self._canvas, *coordinate, color=C.BLUE)
+        for coordinate in ((2, 10), (2, 9), (8, 10), (8, 9)):
+            Cavalry(self._canvas, *coordinate, color=C.BLUE)
 
 
 if __name__ == "__main__":
