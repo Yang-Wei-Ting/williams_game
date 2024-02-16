@@ -140,7 +140,7 @@ class EndTurn(Control):
         Display pop-up image.
         """
         if Popup.instance is None:
-            Popup(self._canvas, 0, 0).configure(image=getattr(Image, image_name))
+            Popup(self._canvas, 5, 6).configure(image=getattr(Image, image_name))
 
     def _enemy_wave_generator_function(self):
         """
