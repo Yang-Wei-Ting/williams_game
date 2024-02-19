@@ -6,6 +6,7 @@ from random import choice, sample
 
 from game.bases import GameObject
 from game.cores import Archer, Cavalry, Infantry, King, Soldier
+from game.miscs import Configuration as C
 from game.miscs import Image
 
 
@@ -140,7 +141,8 @@ class EndTurn(Control):
         Display pop-up image.
         """
         if Popup.instance is None:
-            Popup(self._canvas, 5, 6).configure(image=getattr(Image, image_name))
+            x, y = C.HORIZONTAL_LAND_TILE_COUNT // 2, C.VERTICAL_TILE_COUNT // 2
+            Popup(self._canvas, x, y).configure(image=getattr(Image, image_name))
 
     def _enemy_wave_generator_function(self):
         """

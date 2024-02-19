@@ -10,7 +10,7 @@ from tkinter.ttk import Style
 from game.controls import EndTurn, Restart
 from game.cores import Archer, Cavalry, Infantry, King
 from game.miscs import Configuration as C
-from game.miscs import Image
+from game.miscs import Image, get_pixels
 
 
 class Program:
@@ -28,8 +28,8 @@ class Program:
 
         self._canvas = tk.Canvas(
             self._window,
-            width=780,
-            height=780,
+            width=C.TILE_DIMENSION * C.HORIZONTAL_TILE_COUNT,
+            height=C.TILE_DIMENSION * C.VERTICAL_TILE_COUNT,
             background="Black",
             highlightthickness=0,
         )
@@ -37,8 +37,8 @@ class Program:
 
         Image.initialize()
 
-        self._end_turn_button = EndTurn(self._canvas, 9.75, 11.9)
-        self._restart_button = Restart(self._canvas, 0.25, 11.9, window=self._window)
+        self._end_turn_button = EndTurn(self._canvas, 12, 11)
+        self._restart_button = Restart(self._canvas, 12, 0, window=self._window)
 
         self._create_landscape()
 
@@ -61,24 +61,23 @@ class Program:
         """
         Create landscape.
         """
-        create = self._canvas.create_image
-
-        # Create lands
         LANDS = [getattr(Image, f"land_{i}") for i in range(1, 15)]
         WEIGHTS = (2, 2, 3, 3, 4, 4, 5, 4, 4, 3, 3, 2, 2, 3)
-        for x in range(90, 691, 60):
-            for y in range(30, 691, 60):
-                create(x, y, image=choices(LANDS, weights=WEIGHTS)[0])
 
-        # Create water
-        for i in range(90, 691, 60):
-            create(i, 750, image=Image.water_s)
-            create(30, i, image=Image.water_w)
-            create(750, i, image=Image.water_e)
-        create(30, 30, image=Image.water_w)
-        create(750, 30, image=Image.water_e)
-        create(30, 750, image=Image.water_sw)
-        create(750, 750, image=Image.water_se)
+        for y in range(C.VERTICAL_TILE_COUNT):
+            for x in range(C.HORIZONTAL_LAND_TILE_COUNT):
+                self._canvas.create_image(
+                    *get_pixels(x, y),
+                    image=choices(LANDS, weights=WEIGHTS)[0],
+                )
+
+            for _ in range(C.HORIZONTAL_SHORE_TILE_COUNT):
+                x += 1
+                self._canvas.create_image(*get_pixels(x, y), image=Image.shore)
+
+            for _ in range(C.HORIZONTAL_OCEAN_TILE_COUNT):
+                x += 1
+                self._canvas.create_image(*get_pixels(x, y), image=Image.ocean)
 
     def _create_initial_allies(self) -> None:
         """
