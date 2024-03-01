@@ -92,13 +92,11 @@ class Program:
         """
         Create initial ally instances.
         """
-        King(self._canvas, 5, 10, color=C.BLUE)
-        for coordinate in ((4, 9), (5, 9), (5, 8), (6, 9)):
-            Infantry(self._canvas, *coordinate, color=C.BLUE)
-        for coordinate in ((3, 10), (4, 10), (6, 10), (7, 10)):
-            Archer(self._canvas, *coordinate, color=C.BLUE)
-        for coordinate in ((2, 10), (2, 9), (8, 10), (8, 9)):
-            Cavalry(self._canvas, *coordinate, color=C.BLUE)
+        x, y = C.HORIZONTAL_LAND_TILE_COUNT // 2, C.VERTICAL_TILE_COUNT // 2
+        King(self._canvas, x + 1, y, color=C.BLUE)
+        Infantry(self._canvas, x, y + 1, color=C.BLUE)
+        Archer(self._canvas, x - 1, y, color=C.BLUE)
+        Cavalry(self._canvas, x, y - 1, color=C.BLUE)
 
 
 if __name__ == "__main__":

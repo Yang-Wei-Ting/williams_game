@@ -7,7 +7,7 @@ from random import choice, sample
 from game.bases import GameObject
 from game.miscs import Configuration as C
 from game.miscs import Image
-from game.soldiers import Archer, Cavalry, Infantry, King
+from game.soldiers import Archer, Cavalry, Infantry
 from game.states import SoldierState
 
 
@@ -149,52 +149,57 @@ class EndTurn(Control):
         """
         Lazily create enemy waves.
         """
+        H = C.HORIZONTAL_LAND_TILE_COUNT
+        V = C.VERTICAL_TILE_COUNT
+        area_north_east = [
+            *[(H - 1, y) for y in range(6)],
+            *[(x, 0) for x in range(H - 3, H - 1)],
+        ]
+        area_north_west = [
+            *[(0, y) for y in range(6)],
+            *[(x, 0) for x in range(1, 3)],
+        ]
+        area_south_east = [
+            *[(H - 1, y) for y in range(V - 6, V)],
+            *[(x, V - 1) for x in range(H - 3, H - 1)],
+        ]
+        area_south_west = [
+            *[(0, y) for y in range(V - 6, V)],
+            *[(x, V - 1) for x in range(1, 3)],
+        ]
+        get_random_area = lambda: choice([area_north_east, area_north_west, area_south_east, area_south_west])
+        get_random_common_soldier = lambda: choice([Archer, Cavalry, Infantry])
+
         # Wave 1
-        for x in range(4, 7):
-            Archer(self._canvas, x, 0)
+        Infantry(self._canvas, *choice(get_random_area()))
         yield
 
         # Wave 2
-        for x in range(3, 8):
-            Cavalry(self._canvas, x, 0)
+        Archer(self._canvas, *choice(get_random_area()))
         yield
 
         # Wave 3
-        for x in range(2, 9):
-            Infantry(self._canvas, x, 0)
+        Cavalry(self._canvas, *choice(get_random_area()))
         yield
 
         # Wave 4
-        for x in range(0, 11):
-            choice([Archer, Cavalry, Infantry])(self._canvas, x, 0).promote(4)
+        for coordinate in sample(get_random_area(), 2):
+            get_random_common_soldier()(self._canvas, *coordinate)
         yield
 
         # Wave 5
-        for x in range(0, 11):
-            choice([Archer, Cavalry, Infantry])(self._canvas, x, 0).promote(4)
-        for x in range(3, 8):
-            choice([Archer, Cavalry, Infantry])(self._canvas, x, 1).promote(4)
+        for coordinate in sample(get_random_area(), 3):
+            get_random_common_soldier()(self._canvas, *coordinate)
         yield
 
         # Wave 6
-        for x in range(2, 9):
-            Archer(self._canvas, x, 0)
-            Infantry(self._canvas, x, 1).promote(12)
-        for x in (0, 1, 9, 10):
-            for y in (0, 1):
-                Cavalry(self._canvas, x, y).promote(12)
+        for coordinate in sample(get_random_area(), 4):
+            get_random_common_soldier()(self._canvas, *coordinate)
         yield
 
         # Wave 7
-        for x in range(2, 9):
-            for y in (0, 1):
-                Archer(self._canvas, x, y)
-        for x in (0, 1, 9, 10):
-            for y in range(0, 3):
-                Cavalry(self._canvas, x, y).promote(12)
-        for x in (2, 3, 4, 6, 7, 8):
-            Infantry(self._canvas, x, 2).promote(12)
-        King(self._canvas, 5, 2).promote(60)
+        for coordinate in sample(get_random_area(), 5):
+            get_random_common_soldier()(self._canvas, *coordinate)
         yield
 
 
