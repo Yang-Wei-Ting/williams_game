@@ -49,6 +49,12 @@ class GameObject(ABC):
         self._canvas.delete(self._main_widget_id)
         del self._main_widget_id
 
+    def configure_main_widget(self, *args, **kwargs) -> None:
+        """
+        Configure main widget.
+        """
+        self._main_widget.configure(*args, **kwargs)
+
     def get_distance_between(self, other) -> int:
         """
         Return the Manhattan distance between self and other.
