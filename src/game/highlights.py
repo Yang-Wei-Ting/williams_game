@@ -56,7 +56,7 @@ class Movement(GameObject):
         """
         Configure widget.
         """
-        self.configure(
+        self._main_widget.configure(
             image=Image.transparent_12x12,
             background="Royal Blue",
             activebackground="Royal Blue",

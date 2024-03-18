@@ -58,7 +58,7 @@ class Soldier(GameObject):
         """
         Configure widget.
         """
-        self.configure(
+        self._main_widget.configure(
             relief=tk.RAISED,
             borderwidth=5,
             highlightthickness=0,
@@ -75,7 +75,7 @@ class Soldier(GameObject):
         """
         self._main_widget_id = self._canvas.create_window(
             *get_pixels(self.x, self.y, y_pixel_shift=5.0),
-            window=self,
+            window=self._main_widget,
         )
         self._healthbar_id = self._canvas.create_window(
             *get_pixels(self.x, self.y, y_pixel_shift=-22.5),
@@ -239,7 +239,7 @@ class Soldier(GameObject):
         color_name = C.COLOR_NAME_BY_HEX_TRIPLET[color]
         soldier_type = type(self).__name__.lower()
 
-        self.config(
+        self._main_widget.config(
             image=getattr(Image, f"{color_name}_{soldier_type}_{self.level}"),
             background=color,
             activebackground=color,

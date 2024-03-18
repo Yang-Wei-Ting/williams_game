@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from game.miscs import get_pixels
 
 
-class GameObject(tk.Button, ABC):
+class GameObject(ABC):
     """
     An abstract base class for all game objects.
     """
@@ -24,7 +24,7 @@ class GameObject(tk.Button, ABC):
         """
         Create widget.
         """
-        super().__init__(self._canvas)
+        self._main_widget = tk.Button(self._canvas)
 
     @abstractmethod
     def _configure_widget(self) -> None:
@@ -37,7 +37,10 @@ class GameObject(tk.Button, ABC):
         """
         Create canvas window object.
         """
-        self._main_widget_id = self._canvas.create_window(*get_pixels(self.x, self.y), window=self)
+        self._main_widget_id = self._canvas.create_window(
+            *get_pixels(self.x, self.y),
+            window=self._main_widget,
+        )
 
     def remove_canvas_window_object(self) -> None:
         """

@@ -20,7 +20,7 @@ class Control(GameObject):
         """
         Configure widget.
         """
-        self.configure(
+        self._main_widget.configure(
             background="Burlywood4",
             activebackground="Burlywood4",
             relief=tk.RAISED,
@@ -81,7 +81,7 @@ class EndTurn(Control):
         Configure widget.
         """
         super()._configure_widget()
-        self.configure(image=Image.end_turn)
+        self._main_widget.configure(image=Image.end_turn)
 
     def handle_click_event(self) -> None:
         """
@@ -143,7 +143,7 @@ class EndTurn(Control):
         """
         if Popup.instance is None:
             x, y = C.HORIZONTAL_LAND_TILE_COUNT // 2, C.VERTICAL_TILE_COUNT // 2
-            Popup(self._canvas, x, y).configure(image=getattr(Image, image_name))
+            Popup(self._canvas, x, y)._main_widget.configure(image=getattr(Image, image_name))
 
     def _enemy_wave_generator_function(self):
         """
@@ -215,7 +215,7 @@ class Restart(Control):
         Configure widget.
         """
         super()._configure_widget()
-        self.configure(image=Image.restart)
+        self._main_widget.configure(image=Image.restart)
 
     def handle_click_event(self) -> None:
         """
