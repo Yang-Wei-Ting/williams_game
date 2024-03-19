@@ -44,15 +44,7 @@ class Soldier(GameObject):
         Create widgets.
         """
         super()._create_widgets()
-        self.healthbar = Progressbar(
-            self._canvas,
-            length=self.health / 2,
-            maximum=self.health,
-            mode="determinate",
-            orient=tk.HORIZONTAL,
-            style="TProgressbar",
-            value=self.health,
-        )
+        self.healthbar = Progressbar(self._canvas)
 
     def _configure_widgets(self) -> None:
         """
@@ -66,6 +58,14 @@ class Soldier(GameObject):
             command=self.handle_click_event,
         )
         self.refresh_image()
+        self.healthbar.configure(
+            length=self.health / 2,
+            maximum=self.health,
+            mode="determinate",
+            orient=tk.HORIZONTAL,
+            style="TProgressbar",
+            value=self.health,
+        )
 
     def _attach_widgets_to_canvas(self) -> None:
         """
