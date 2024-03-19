@@ -42,9 +42,9 @@ class AttackRange(GameObject):
         """
         Remove widgets from canvas and set 'AttackRangeState.instance' to None.
         """
+        AttackRangeState.instance = None
         self._canvas.delete(self._main_widget_id)
         del self._main_widget_id
-        AttackRangeState.instance = None
 
 
 class Movement(GameObject):
@@ -79,8 +79,8 @@ class Movement(GameObject):
         """
         Remove widgets from canvas then destroy them and remove self from 'MovementState.instances'.
         """
-        super().destroy_widgets()
         MovementState.instances.remove(self)
+        super().destroy_widgets()
 
     def handle_click_event(self) -> None:
         """

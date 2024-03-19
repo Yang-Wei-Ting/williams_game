@@ -59,8 +59,8 @@ class Popup(Control):
         """
         Handle pop-up button's click events.
         """
-        self.destroy_widgets()
         Popup.instance = None
+        self.destroy_widgets()
 
 
 class EndTurn(Control):
