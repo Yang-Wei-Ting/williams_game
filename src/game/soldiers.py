@@ -289,9 +289,8 @@ class Soldier(GameObject):
                 if AttackRangeState.instance:
                     AttackRangeState.instance.destroy_widgets()
 
-                for highlight in MovementState.instances:
-                    GameObject.destroy_widgets(highlight)
-                MovementState.instances = []
+                for highlight in MovementState.instances[:]:
+                    highlight.destroy_widgets()
             else:
                 SoldierState.chosen_ally.handle_click_event()
                 self.handle_click_event()
