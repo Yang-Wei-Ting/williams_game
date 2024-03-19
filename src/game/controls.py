@@ -16,9 +16,9 @@ class Control(GameObject):
     An abstract base class for all control button objects.
     """
 
-    def _configure_widget(self) -> None:
+    def _configure_widgets(self) -> None:
         """
-        Configure widget.
+        Configure widgets.
         """
         self.configure_main_widget(
             background="Burlywood4",
@@ -59,7 +59,7 @@ class Popup(Control):
         """
         Handle pop-up button's click events.
         """
-        self.remove_canvas_window_object()
+        self.detach_widgets()
         Popup.instance = None
 
 
@@ -71,16 +71,16 @@ class EndTurn(Control):
 
     def __init__(self, canvas: tk.Canvas, x: int, y: int) -> None:
         """
-        Create widget and canvas window object.
+        Create widgets then attach them to canvas.
         """
         self._enemy_wave_generator_iterator = self._enemy_wave_generator_function()
         super().__init__(canvas, x, y)
 
-    def _configure_widget(self) -> None:
+    def _configure_widgets(self) -> None:
         """
-        Configure widget.
+        Configure widgets.
         """
-        super()._configure_widget()
+        super()._configure_widgets()
         self.configure_main_widget(image=Image.end_turn)
 
     def handle_click_event(self) -> None:
@@ -205,16 +205,16 @@ class Restart(Control):
 
     def __init__(self, canvas: tk.Canvas, x: int, y: int, *, window: tk.Tk) -> None:
         """
-        Create widget and canvas window object.
+        Create widgets then attach them to canvas.
         """
         self._window = window
         super().__init__(canvas, x, y)
 
-    def _configure_widget(self) -> None:
+    def _configure_widgets(self) -> None:
         """
-        Configure widget.
+        Configure widgets.
         """
-        super()._configure_widget()
+        super()._configure_widgets()
         self.configure_main_widget(image=Image.restart)
 
     def handle_click_event(self) -> None:

@@ -30,7 +30,7 @@ class Soldier(GameObject):
 
     def __init__(self, canvas: tk.Canvas, x: int, y: int, *, color: str = C.RED) -> None:
         """
-        Create widget and canvas window object.
+        Create widgets then attach them to canvas.
         """
         self.color = color
         self.level = 1
@@ -39,11 +39,11 @@ class Soldier(GameObject):
         self.attacked_this_turn = False
         super().__init__(canvas, x, y)
 
-    def _create_widget(self) -> None:
+    def _create_widgets(self) -> None:
         """
-        Create widget.
+        Create widgets.
         """
-        super()._create_widget()
+        super()._create_widgets()
         self.healthbar = Progressbar(
             self._canvas,
             length=self.health / 2,
@@ -54,9 +54,9 @@ class Soldier(GameObject):
             value=self.health,
         )
 
-    def _configure_widget(self) -> None:
+    def _configure_widgets(self) -> None:
         """
-        Configure widget.
+        Configure widgets.
         """
         self.configure_main_widget(
             relief=tk.RAISED,
@@ -67,9 +67,9 @@ class Soldier(GameObject):
         )
         self.refresh_image()
 
-    def _create_canvas_window_object(self) -> None:
+    def _attach_widgets_to_canvas(self) -> None:
         """
-        Create canvas window object.
+        Attach widgets to canvas.
         Add self to 'SoldierState.allies' or 'SoldierState.enemies'.
         Add self's coordinate to 'GameState.occupied_coordinates'.
         """
@@ -85,9 +85,9 @@ class Soldier(GameObject):
         self._get_friends().append(self)
         GameState.occupied_coordinates.add((self.x, self.y))
 
-    def remove_canvas_window_object(self) -> None:
+    def detach_widgets(self) -> None:
         """
-        Remove canvas window object.
+        Remove widgets from canvas.
         Remove self from 'SoldierState.allies' or 'SoldierState.enemies'.
         Remove self's coordinate from 'GameState.occupied_coordinates'.
         """
@@ -97,7 +97,7 @@ class Soldier(GameObject):
         self._canvas.delete(self._healthbar_id)
         del self._healthbar_id
         del self.healthbar
-        super().remove_canvas_window_object()
+        super().detach_widgets()
 
     def move_to(self, x: int, y: int) -> None:
         """
@@ -124,7 +124,7 @@ class Soldier(GameObject):
         if other.health > 0:
             other.healthbar["value"] = other.health
         else:
-            other.remove_canvas_window_object()
+            other.detach_widgets()
             self.experience += 1
 
         self.attacked_this_turn = True
@@ -286,10 +286,10 @@ class Soldier(GameObject):
                 SoldierState.chosen_ally = None
 
                 if AttackRangeState.instance:
-                    AttackRangeState.instance.remove_canvas_window_object()
+                    AttackRangeState.instance.detach_widgets()
 
                 for highlight in MovementState.instances:
-                    GameObject.remove_canvas_window_object(highlight)
+                    GameObject.detach_widgets(highlight)
                 MovementState.instances = []
             else:
                 SoldierState.chosen_ally.handle_click_event()
