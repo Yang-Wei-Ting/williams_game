@@ -42,12 +42,14 @@ class GameObject(ABC):
             window=self._main_widget,
         )
 
-    def detach_widgets(self) -> None:
+    def destroy_widgets(self) -> None:
         """
-        Remove widgets from canvas.
+        Remove widgets from canvas then destroy them.
         """
         self._canvas.delete(self._main_widget_id)
         del self._main_widget_id
+        self._main_widget.destroy()
+        del self._main_widget
 
     def configure_main_widget(self, *args, **kwargs) -> None:
         """

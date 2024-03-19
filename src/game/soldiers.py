@@ -85,9 +85,9 @@ class Soldier(GameObject):
         self._get_friends().append(self)
         GameState.occupied_coordinates.add((self.x, self.y))
 
-    def detach_widgets(self) -> None:
+    def destroy_widgets(self) -> None:
         """
-        Remove widgets from canvas.
+        Remove widgets from canvas then destroy them.
         Remove self from 'SoldierState.allies' or 'SoldierState.enemies'.
         Remove self's coordinate from 'GameState.occupied_coordinates'.
         """
@@ -96,8 +96,9 @@ class Soldier(GameObject):
 
         self._canvas.delete(self._healthbar_id)
         del self._healthbar_id
+        self.healthbar.destroy()
         del self.healthbar
-        super().detach_widgets()
+        super().destroy_widgets()
 
     def move_to(self, x: int, y: int) -> None:
         """
@@ -124,7 +125,7 @@ class Soldier(GameObject):
         if other.health > 0:
             other.healthbar["value"] = other.health
         else:
-            other.detach_widgets()
+            other.destroy_widgets()
             self.experience += 1
 
         self.attacked_this_turn = True
@@ -286,10 +287,10 @@ class Soldier(GameObject):
                 SoldierState.chosen_ally = None
 
                 if AttackRangeState.instance:
-                    AttackRangeState.instance.detach_widgets()
+                    AttackRangeState.instance.destroy_widgets()
 
                 for highlight in MovementState.instances:
-                    GameObject.detach_widgets(highlight)
+                    GameObject.destroy_widgets(highlight)
                 MovementState.instances = []
             else:
                 SoldierState.chosen_ally.handle_click_event()

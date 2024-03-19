@@ -59,7 +59,7 @@ class Popup(Control):
         """
         Handle pop-up button's click events.
         """
-        self.detach_widgets()
+        self.destroy_widgets()
         Popup.instance = None
 
 
