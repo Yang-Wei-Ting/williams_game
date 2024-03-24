@@ -4,47 +4,58 @@ from abc import ABC, abstractmethod
 from game.miscs import get_pixels
 
 
-class GameObject(tk.Button, ABC):
+class GameObject(ABC):
     """
     An abstract base class for all game objects.
     """
 
     def __init__(self, canvas: tk.Canvas, x: int, y: int) -> None:
         """
-        Create widget and canvas window object.
+        Create widgets then attach them to canvas.
         """
         self._canvas = canvas
         self.x = x
         self.y = y
-        self._create_widget()
-        self._configure_widget()
-        self._create_canvas_window_object()
+        self._create_widgets()
+        self._configure_widgets()
+        self._attach_widgets_to_canvas()
 
-    def _create_widget(self) -> None:
+    def _create_widgets(self) -> None:
         """
-        Create widget.
+        Create widgets.
         """
-        super().__init__(self._canvas)
+        self._main_widget = tk.Button(self._canvas)
 
     @abstractmethod
-    def _configure_widget(self) -> None:
+    def _configure_widgets(self) -> None:
         """
-        Configure widget.
+        Configure widgets.
         """
         raise NotImplementedError
 
-    def _create_canvas_window_object(self) -> None:
+    def _attach_widgets_to_canvas(self) -> None:
         """
-        Create canvas window object.
+        Attach widgets to canvas.
         """
-        self._main_widget_id = self._canvas.create_window(*get_pixels(self.x, self.y), window=self)
+        self._main_widget_id = self._canvas.create_window(
+            *get_pixels(self.x, self.y),
+            window=self._main_widget,
+        )
 
-    def remove_canvas_window_object(self) -> None:
+    def destroy_widgets(self) -> None:
         """
-        Remove canvas window object.
+        Remove widgets from canvas then destroy them.
         """
         self._canvas.delete(self._main_widget_id)
         del self._main_widget_id
+        self._main_widget.destroy()
+        del self._main_widget
+
+    def configure_main_widget(self, *args, **kwargs) -> None:
+        """
+        Configure main widget.
+        """
+        self._main_widget.configure(*args, **kwargs)
 
     def get_distance_between(self, other) -> int:
         """

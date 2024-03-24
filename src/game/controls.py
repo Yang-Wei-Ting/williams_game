@@ -16,11 +16,11 @@ class Control(GameObject):
     An abstract base class for all control button objects.
     """
 
-    def _configure_widget(self) -> None:
+    def _configure_widgets(self) -> None:
         """
-        Configure widget.
+        Configure widgets.
         """
-        self.configure(
+        self.configure_main_widget(
             background="Burlywood4",
             activebackground="Burlywood4",
             relief=tk.RAISED,
@@ -59,8 +59,8 @@ class Popup(Control):
         """
         Handle pop-up button's click events.
         """
-        self.remove_canvas_window_object()
         Popup.instance = None
+        self.destroy_widgets()
 
 
 class EndTurn(Control):
@@ -71,17 +71,17 @@ class EndTurn(Control):
 
     def __init__(self, canvas: tk.Canvas, x: int, y: int) -> None:
         """
-        Create widget and canvas window object.
+        Create widgets then attach them to canvas.
         """
         self._enemy_wave_generator_iterator = self._enemy_wave_generator_function()
         super().__init__(canvas, x, y)
 
-    def _configure_widget(self) -> None:
+    def _configure_widgets(self) -> None:
         """
-        Configure widget.
+        Configure widgets.
         """
-        super()._configure_widget()
-        self.configure(image=Image.end_turn)
+        super()._configure_widgets()
+        self.configure_main_widget(image=Image.end_turn)
 
     def handle_click_event(self) -> None:
         """
@@ -143,7 +143,7 @@ class EndTurn(Control):
         """
         if Popup.instance is None:
             x, y = C.HORIZONTAL_LAND_TILE_COUNT // 2, C.VERTICAL_TILE_COUNT // 2
-            Popup(self._canvas, x, y).configure(image=getattr(Image, image_name))
+            Popup(self._canvas, x, y).configure_main_widget(image=getattr(Image, image_name))
 
     def _enemy_wave_generator_function(self):
         """
@@ -205,17 +205,17 @@ class Restart(Control):
 
     def __init__(self, canvas: tk.Canvas, x: int, y: int, *, window: tk.Tk) -> None:
         """
-        Create widget and canvas window object.
+        Create widgets then attach them to canvas.
         """
         self._window = window
         super().__init__(canvas, x, y)
 
-    def _configure_widget(self) -> None:
+    def _configure_widgets(self) -> None:
         """
-        Configure widget.
+        Configure widgets.
         """
-        super()._configure_widget()
-        self.configure(image=Image.restart)
+        super()._configure_widgets()
+        self.configure_main_widget(image=Image.restart)
 
     def handle_click_event(self) -> None:
         """

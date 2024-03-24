@@ -13,24 +13,24 @@ class AttackRange(GameObject):
 
     def __init__(self, canvas: tk.Canvas, x: int, y: int, *, half_diagonal: int) -> None:
         """
-        Create canvas window object.
+        Attach widgets to canvas.
         """
         self._half_diagonal = half_diagonal
         super().__init__(canvas, x, y)
 
-    def _create_widget(self) -> None:
+    def _create_widgets(self) -> None:
         """
-        Override this method as there's no widget to create.
-        """
-
-    def _configure_widget(self) -> None:
-        """
-        Override this method as there's no widget to configure.
+        Override this method as the main widget, tk.PhotoImage, already exists.
         """
 
-    def _create_canvas_window_object(self) -> None:
+    def _configure_widgets(self) -> None:
         """
-        Create canvas window object and set 'AttackRangeState.instance' to self.
+        Override this method as the main widget, tk.PhotoImage, is already configured.
+        """
+
+    def _attach_widgets_to_canvas(self) -> None:
+        """
+        Attach widgets to canvas and set 'AttackRangeState.instance' to self.
         """
         self._main_widget_id = self._canvas.create_image(
             *get_pixels(self.x, self.y),
@@ -38,12 +38,13 @@ class AttackRange(GameObject):
         )
         AttackRangeState.instance = self
 
-    def remove_canvas_window_object(self) -> None:
+    def destroy_widgets(self) -> None:
         """
-        Remove canvas window object and set 'AttackRangeState.instance' to None.
+        Remove widgets from canvas and set 'AttackRangeState.instance' to None.
         """
-        super().remove_canvas_window_object()
         AttackRangeState.instance = None
+        self._canvas.delete(self._main_widget_id)
+        del self._main_widget_id
 
 
 class Movement(GameObject):
@@ -52,11 +53,11 @@ class Movement(GameObject):
     When a movement is clicked on, the chosen ally instance moves to its coordinate.
     """
 
-    def _configure_widget(self) -> None:
+    def _configure_widgets(self) -> None:
         """
-        Configure widget.
+        Configure widgets.
         """
-        self.configure(
+        self.configure_main_widget(
             image=Image.transparent_12x12,
             background="Royal Blue",
             activebackground="Royal Blue",
@@ -67,19 +68,19 @@ class Movement(GameObject):
             command=self.handle_click_event,
         )
 
-    def _create_canvas_window_object(self) -> None:
+    def _attach_widgets_to_canvas(self) -> None:
         """
-        Create canvas window object and append self to 'MovementState.instances'.
+        Attach widgets to canvas and append self to 'MovementState.instances'.
         """
-        super()._create_canvas_window_object()
+        super()._attach_widgets_to_canvas()
         MovementState.instances.append(self)
 
-    def remove_canvas_window_object(self) -> None:
+    def destroy_widgets(self) -> None:
         """
-        Remove canvas window object and remove self from 'MovementState.instances'.
+        Remove widgets from canvas then destroy them and remove self from 'MovementState.instances'.
         """
-        super().remove_canvas_window_object()
         MovementState.instances.remove(self)
+        super().destroy_widgets()
 
     def handle_click_event(self) -> None:
         """

@@ -37,8 +37,17 @@ class Program:
 
         Image.initialize()
 
-        self._end_turn_button = EndTurn(self._canvas, 12, 11)
-        self._restart_button = Restart(self._canvas, 12, 0, window=self._window)
+        self._end_turn_button = EndTurn(
+            self._canvas,
+            C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
+            C.VERTICAL_TILE_COUNT - 1,
+        )
+        self._restart_button = Restart(
+            self._canvas,
+            C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
+            0,
+            window=self._window,
+        )
 
         self._create_landscape()
 
