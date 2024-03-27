@@ -8,7 +8,7 @@ from game.bases import GameObject
 from game.miscs import Configuration as C
 from game.miscs import Image
 from game.soldiers import Archer, Cavalry, Infantry
-from game.states import SoldierState
+from game.states import CoinDisplayState, GameState, SoldierState
 
 
 class Control(GameObject):
@@ -130,10 +130,13 @@ class EndTurn(Control):
         If there is no more enemy wave, display victory pop-up.
         """
         try:
-            next(self._enemy_wave_generator_iterator)
+            wave_number = next(self._enemy_wave_generator_iterator)
         except StopIteration:
             self._display_popup("victory")
         else:
+            GameState.coin += (wave_number - 1) * 5
+            CoinDisplayState.instance.refresh()
+
             for ally in SoldierState.allies:
                 ally.heal_itself(40)
 
@@ -172,35 +175,35 @@ class EndTurn(Control):
 
         # Wave 1
         Infantry(self._canvas, *choice(get_random_area()))
-        yield
+        yield 1
 
         # Wave 2
         Archer(self._canvas, *choice(get_random_area()))
-        yield
+        yield 2
 
         # Wave 3
         Cavalry(self._canvas, *choice(get_random_area()))
-        yield
+        yield 3
 
         # Wave 4
         for coordinate in sample(get_random_area(), 2):
             get_random_common_soldier()(self._canvas, *coordinate)
-        yield
+        yield 4
 
         # Wave 5
         for coordinate in sample(get_random_area(), 3):
             get_random_common_soldier()(self._canvas, *coordinate)
-        yield
+        yield 5
 
         # Wave 6
         for coordinate in sample(get_random_area(), 4):
             get_random_common_soldier()(self._canvas, *coordinate)
-        yield
+        yield 6
 
         # Wave 7
         for coordinate in sample(get_random_area(), 5):
             get_random_common_soldier()(self._canvas, *coordinate)
-        yield
+        yield 7
 
 
 class Restart(Control):

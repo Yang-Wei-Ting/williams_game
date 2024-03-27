@@ -8,6 +8,7 @@ from random import choices
 from tkinter.ttk import Style
 
 from game.controls import EndTurn, Restart
+from game.displays import CoinDisplay
 from game.miscs import Configuration as C
 from game.miscs import Image, get_pixels
 from game.soldiers import Archer, Cavalry, Infantry, King
@@ -47,6 +48,12 @@ class Program:
             C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
             0,
             window=self._window,
+        )
+
+        self._coin_label = CoinDisplay(
+            self._canvas,
+            C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
+            1,
         )
 
         self._create_landscape()

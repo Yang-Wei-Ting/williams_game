@@ -4,6 +4,12 @@ class GameState:
     """
 
     occupied_coordinates = set()
+    coin = 0
+
+
+class CoinDisplayState:
+
+    instance = None
 
 
 class AttackRangeState:
