@@ -43,7 +43,7 @@ class Soldier(GameObject):
         """
         Create widgets.
         """
-        super()._create_widgets()
+        self._main_widget = tk.Button(self._canvas)
         self.healthbar = Progressbar(self._canvas)
 
     def _configure_widgets(self) -> None:
