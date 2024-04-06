@@ -8,7 +8,7 @@ from game.bases import GameObject
 from game.miscs import Configuration as C
 from game.miscs import Image
 from game.soldiers import Archer, Cavalry, Infantry, King
-from game.states import SoldierState
+from game.states import PopupState, SoldierState
 
 
 class Control(GameObject):
@@ -47,22 +47,20 @@ class Popup(Control):
     Only one pop-up button object can exist at a given time.
     """
 
-    instance = None
-
     def __init__(self, canvas: tk.Canvas, x: int, y: int) -> None:
         """
         """
-        if Popup.instance:
-            Popup.instance.handle_click_event()
+        if PopupState.instance:
+            PopupState.instance.handle_click_event()
 
         super().__init__(canvas, x, y)
-        Popup.instance = self
+        PopupState.instance = self
 
     def handle_click_event(self) -> None:
         """
         Handle pop-up button's click events.
         """
-        Popup.instance = None
+        PopupState.instance = None
         self.destroy_widgets()
 
 
@@ -144,7 +142,7 @@ class EndTurn(Control):
         """
         Display pop-up image.
         """
-        if Popup.instance is None:
+        if PopupState.instance is None:
             x, y = C.HORIZONTAL_LAND_TILE_COUNT // 2, C.VERTICAL_TILE_COUNT // 2
             Popup(self._canvas, x, y).configure_main_widget(image=getattr(Image, image_name))
 

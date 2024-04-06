@@ -30,3 +30,8 @@ class SoldierState:
     allies = []
     enemies = []
     chosen_ally = None
+
+
+class PopupState:
+
+    instance = None
