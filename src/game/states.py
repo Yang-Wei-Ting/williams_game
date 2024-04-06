@@ -32,6 +32,6 @@ class SoldierState:
     chosen_ally = None
 
 
-class PopupState:
+class PopUpControlState:
 
     instance = None

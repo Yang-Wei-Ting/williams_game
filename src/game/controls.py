@@ -8,7 +8,7 @@ from game.bases import GameObject
 from game.miscs import Configuration as C
 from game.miscs import Image
 from game.soldiers import Archer, Cavalry, Infantry, King
-from game.states import PopupState, SoldierState
+from game.states import PopUpControlState, SoldierState
 
 
 class Control(GameObject):
@@ -41,7 +41,7 @@ class Control(GameObject):
         raise NotImplementedError
 
 
-class Popup(Control):
+class PopUpControl(Control):
     """
     A class that instantiates pop-up button objects.
     Only one pop-up button object can exist at a given time.
@@ -50,21 +50,21 @@ class Popup(Control):
     def __init__(self, canvas: tk.Canvas, x: int, y: int) -> None:
         """
         """
-        if PopupState.instance:
-            PopupState.instance.handle_click_event()
+        if PopUpControlState.instance:
+            PopUpControlState.instance.handle_click_event()
 
         super().__init__(canvas, x, y)
-        PopupState.instance = self
+        PopUpControlState.instance = self
 
     def handle_click_event(self) -> None:
         """
         Handle pop-up button's click events.
         """
-        PopupState.instance = None
+        PopUpControlState.instance = None
         self.destroy_widgets()
 
 
-class EndTurn(Control):
+class EndTurnControl(Control):
     """
     A class that instantiates end turn buttons which upon clicked, end player's
     turn then execute computer's turn.
@@ -136,15 +136,15 @@ class EndTurn(Control):
             self._display_popup("victory")
         else:
             for ally in SoldierState.allies:
-                ally.heal_itself(40)
+                ally.restore_health(40)
 
     def _display_popup(self, image_name: str) -> None:
         """
         Display pop-up image.
         """
-        if PopupState.instance is None:
+        if PopUpControlState.instance is None:
             x, y = C.HORIZONTAL_LAND_TILE_COUNT // 2, C.VERTICAL_TILE_COUNT // 2
-            Popup(self._canvas, x, y).configure_main_widget(image=getattr(Image, image_name))
+            PopUpControl(self._canvas, x, y).configure_main_widget(image=getattr(Image, image_name))
 
     def _enemy_wave_generator_function(self):
         """
@@ -199,7 +199,7 @@ class EndTurn(Control):
         yield
 
 
-class Restart(Control):
+class RestartControl(Control):
     """
     A class that instantiates restart buttons which upon clicked, restart the game.
     """

@@ -142,7 +142,7 @@ class Soldier(GameObject):
             self.level += 1
             self.attack += 3
             self.defense += 2
-            self.heal_itself(10)
+            self.restore_health(10)
 
         self.refresh_image()
 
@@ -220,7 +220,7 @@ class Soldier(GameObject):
             self.assault(other)
             self.promote()
 
-    def heal_itself(self, amount: int) -> None:
+    def restore_health(self, amount: int) -> None:
         """
         Increase self's health point (cannot exceed the maximum value).
         """

@@ -7,7 +7,7 @@ import tkinter as tk
 from random import choices
 from tkinter.ttk import Style
 
-from game.controls import EndTurn, Restart
+from game.controls import EndTurnControl, RestartControl
 from game.miscs import Configuration as C
 from game.miscs import Image, get_pixels
 from game.soldiers import Archer, Cavalry, Infantry, King
@@ -37,12 +37,12 @@ class Program:
 
         Image.initialize()
 
-        self._end_turn_button = EndTurn(
+        self._end_turn_control = EndTurnControl(
             self._canvas,
             C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
             C.VERTICAL_TILE_COUNT - 1,
         )
-        self._restart_button = Restart(
+        self._restart_control = RestartControl(
             self._canvas,
             C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
             0,
