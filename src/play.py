@@ -46,7 +46,6 @@ class Program:
             self._canvas,
             C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
             0,
-            window=self._window,
         )
 
         self._create_landscape()

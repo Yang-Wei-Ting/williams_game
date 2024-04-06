@@ -47,14 +47,19 @@ class PopUpControl(Control):
     Only one pop-up button object can exist at a given time.
     """
 
-    def __init__(self, canvas: tk.Canvas, x: int, y: int) -> None:
+    def __init__(self, canvas: tk.Canvas, *, image_name: str) -> None:
         """
         """
         if PopUpControlState.instance:
             PopUpControlState.instance.handle_click_event()
 
-        super().__init__(canvas, x, y)
+        self._image_name = image_name
+        super().__init__(canvas, C.HORIZONTAL_LAND_TILE_COUNT // 2, C.VERTICAL_TILE_COUNT // 2)
         PopUpControlState.instance = self
+
+    def _configure_widgets(self) -> None:
+        super()._configure_widgets()
+        self._main_widget.configure(image=getattr(Image, self._image_name))
 
     def handle_click_event(self) -> None:
         """
@@ -115,14 +120,14 @@ class EndTurnControl(Control):
         If there is no ally instance, display defeat pop-up.
         """
         if not SoldierState.allies:
-            self._display_popup("defeat")
+            PopUpControl(self._canvas, image_name="defeat")
             return
 
         for enemy in sample(SoldierState.enemies, len(SoldierState.enemies)):
             enemy.hunt()
 
             if not SoldierState.allies:
-                self._display_popup("defeat")
+                PopUpControl(self._canvas, image_name="defeat")
                 break
 
     def _summon_next_wave(self) -> None:
@@ -133,18 +138,10 @@ class EndTurnControl(Control):
         try:
             next(self._enemy_wave_generator_iterator)
         except StopIteration:
-            self._display_popup("victory")
+            PopUpControl(self._canvas, image_name="victory")
         else:
             for ally in SoldierState.allies:
                 ally.restore_health(40)
-
-    def _display_popup(self, image_name: str) -> None:
-        """
-        Display pop-up image.
-        """
-        if PopUpControlState.instance is None:
-            x, y = C.HORIZONTAL_LAND_TILE_COUNT // 2, C.VERTICAL_TILE_COUNT // 2
-            PopUpControl(self._canvas, x, y)._main_widget.configure(image=getattr(Image, image_name))
 
     def _enemy_wave_generator_function(self):
         """
@@ -204,13 +201,6 @@ class RestartControl(Control):
     A class that instantiates restart buttons which upon clicked, restart the game.
     """
 
-    def __init__(self, canvas: tk.Canvas, x: int, y: int, *, window: tk.Tk) -> None:
-        """
-        Create widgets then attach them to canvas.
-        """
-        self._window = window
-        super().__init__(canvas, x, y)
-
     def _configure_widgets(self) -> None:
         """
         Configure widgets.
@@ -222,7 +212,7 @@ class RestartControl(Control):
         """
         Restart the game.
         """
-        self._window.destroy()
+        self._canvas.master.destroy()
 
         proc = subprocess.run([sys.executable, sys.argv[0]])
         sys.exit(proc.returncode)
