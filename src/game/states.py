@@ -6,12 +6,14 @@ class GameState:
     occupied_coordinates = set()
 
 
-class AttackRangeState:
+class SoldierState:
     """
-    This class keeps tracks of AttackRange class instance.
+    This class keeps tracks of Soldier class instances.
     """
 
-    instance = None
+    allies = []
+    enemies = []
+    chosen_ally = None
 
 
 class MovementState:
@@ -22,11 +24,14 @@ class MovementState:
     instances = []
 
 
-class SoldierState:
+class AttackRangeState:
     """
-    This class keeps tracks of Soldier class instances.
+    This class keeps tracks of AttackRange class instance.
     """
 
-    allies = []
-    enemies = []
-    chosen_ally = None
+    instance = None
+
+
+class PopUpControlState:
+
+    instance = None

@@ -8,7 +8,7 @@ from game.bases import GameObject
 from game.miscs import Configuration as C
 from game.miscs import Image
 from game.soldiers import Archer, Cavalry, Infantry, King
-from game.states import SoldierState
+from game.states import PopUpControlState, SoldierState
 
 
 class Control(GameObject):
@@ -16,11 +16,14 @@ class Control(GameObject):
     An abstract base class for all control button objects.
     """
 
+    def _create_widgets(self) -> None:
+        self._main_widget = tk.Button(self._canvas)
+
     def _configure_widgets(self) -> None:
         """
         Configure widgets.
         """
-        self.configure_main_widget(
+        self._main_widget.configure(
             background="Burlywood4",
             activebackground="Burlywood4",
             relief=tk.RAISED,
@@ -38,32 +41,35 @@ class Control(GameObject):
         raise NotImplementedError
 
 
-class Popup(Control):
+class PopUpControl(Control):
     """
     A class that instantiates pop-up button objects.
     Only one pop-up button object can exist at a given time.
     """
 
-    instance = None
-
-    def __init__(self, canvas: tk.Canvas, x: int, y: int) -> None:
+    def __init__(self, canvas: tk.Canvas, *, image_name: str) -> None:
         """
         """
-        if Popup.instance:
-            Popup.instance.handle_click_event()
+        if PopUpControlState.instance:
+            PopUpControlState.instance.handle_click_event()
 
-        super().__init__(canvas, x, y)
-        Popup.instance = self
+        self._image_name = image_name
+        super().__init__(canvas, C.HORIZONTAL_LAND_TILE_COUNT // 2, C.VERTICAL_TILE_COUNT // 2)
+        PopUpControlState.instance = self
+
+    def _configure_widgets(self) -> None:
+        super()._configure_widgets()
+        self._main_widget.configure(image=getattr(Image, self._image_name))
 
     def handle_click_event(self) -> None:
         """
         Handle pop-up button's click events.
         """
-        Popup.instance = None
+        PopUpControlState.instance = None
         self.destroy_widgets()
 
 
-class EndTurn(Control):
+class EndTurnControl(Control):
     """
     A class that instantiates end turn buttons which upon clicked, end player's
     turn then execute computer's turn.
@@ -81,7 +87,7 @@ class EndTurn(Control):
         Configure widgets.
         """
         super()._configure_widgets()
-        self.configure_main_widget(image=Image.end_turn)
+        self._main_widget.configure(image=Image.end_turn)
 
     def handle_click_event(self) -> None:
         """
@@ -114,14 +120,14 @@ class EndTurn(Control):
         If there is no ally instance, display defeat pop-up.
         """
         if not SoldierState.allies:
-            self._display_popup("defeat")
+            PopUpControl(self._canvas, image_name="defeat")
             return
 
         for enemy in sample(SoldierState.enemies, len(SoldierState.enemies)):
             enemy.hunt()
 
             if not SoldierState.allies:
-                self._display_popup("defeat")
+                PopUpControl(self._canvas, image_name="defeat")
                 break
 
     def _summon_next_wave(self) -> None:
@@ -132,18 +138,10 @@ class EndTurn(Control):
         try:
             next(self._enemy_wave_generator_iterator)
         except StopIteration:
-            self._display_popup("victory")
+            PopUpControl(self._canvas, image_name="victory")
         else:
             for ally in SoldierState.allies:
-                ally.heal_itself(40)
-
-    def _display_popup(self, image_name: str) -> None:
-        """
-        Display pop-up image.
-        """
-        if Popup.instance is None:
-            x, y = C.HORIZONTAL_LAND_TILE_COUNT // 2, C.VERTICAL_TILE_COUNT // 2
-            Popup(self._canvas, x, y).configure_main_widget(image=getattr(Image, image_name))
+                ally.restore_health(40)
 
     def _enemy_wave_generator_function(self):
         """
@@ -198,30 +196,23 @@ class EndTurn(Control):
         yield
 
 
-class Restart(Control):
+class RestartControl(Control):
     """
     A class that instantiates restart buttons which upon clicked, restart the game.
     """
-
-    def __init__(self, canvas: tk.Canvas, x: int, y: int, *, window: tk.Tk) -> None:
-        """
-        Create widgets then attach them to canvas.
-        """
-        self._window = window
-        super().__init__(canvas, x, y)
 
     def _configure_widgets(self) -> None:
         """
         Configure widgets.
         """
         super()._configure_widgets()
-        self.configure_main_widget(image=Image.restart)
+        self._main_widget.configure(image=Image.restart)
 
     def handle_click_event(self) -> None:
         """
         Restart the game.
         """
-        self._window.destroy()
+        self._canvas.master.destroy()
 
         proc = subprocess.run([sys.executable, sys.argv[0]])
         sys.exit(proc.returncode)

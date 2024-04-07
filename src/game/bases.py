@@ -20,11 +20,12 @@ class GameObject(ABC):
         self._configure_widgets()
         self._attach_widgets_to_canvas()
 
+    @abstractmethod
     def _create_widgets(self) -> None:
         """
         Create widgets.
         """
-        self._main_widget = tk.Button(self._canvas)
+        raise NotImplementedError
 
     @abstractmethod
     def _configure_widgets(self) -> None:
@@ -50,12 +51,6 @@ class GameObject(ABC):
         del self._main_widget_id
         self._main_widget.destroy()
         del self._main_widget
-
-    def configure_main_widget(self, *args, **kwargs) -> None:
-        """
-        Configure main widget.
-        """
-        self._main_widget.configure(*args, **kwargs)
 
     def get_distance_between(self, other) -> int:
         """

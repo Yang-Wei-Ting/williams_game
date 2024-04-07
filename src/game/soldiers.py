@@ -43,14 +43,14 @@ class Soldier(GameObject):
         """
         Create widgets.
         """
-        super()._create_widgets()
+        self._main_widget = tk.Button(self._canvas)
         self.healthbar = Progressbar(self._canvas)
 
     def _configure_widgets(self) -> None:
         """
         Configure widgets.
         """
-        self.configure_main_widget(
+        self._main_widget.configure(
             relief=tk.RAISED,
             borderwidth=5,
             highlightthickness=0,
@@ -142,7 +142,7 @@ class Soldier(GameObject):
             self.level += 1
             self.attack += 3
             self.defense += 2
-            self.heal_itself(10)
+            self.restore_health(10)
 
         self.refresh_image()
 
@@ -220,7 +220,7 @@ class Soldier(GameObject):
             self.assault(other)
             self.promote()
 
-    def heal_itself(self, amount: int) -> None:
+    def restore_health(self, amount: int) -> None:
         """
         Increase self's health point (cannot exceed the maximum value).
         """
@@ -240,7 +240,7 @@ class Soldier(GameObject):
         color_name = C.COLOR_NAME_BY_HEX_TRIPLET[color]
         soldier_type = type(self).__name__.lower()
 
-        self.configure_main_widget(
+        self._main_widget.configure(
             image=getattr(Image, f"{color_name}_{soldier_type}_{self.level}"),
             background=color,
             activebackground=color,

@@ -53,11 +53,14 @@ class Movement(GameObject):
     When a movement is clicked on, the chosen ally instance moves to its coordinate.
     """
 
+    def _create_widgets(self) -> None:
+        self._main_widget = tk.Button(self._canvas)
+
     def _configure_widgets(self) -> None:
         """
         Configure widgets.
         """
-        self.configure_main_widget(
+        self._main_widget.configure(
             image=Image.transparent_12x12,
             background="Royal Blue",
             activebackground="Royal Blue",
