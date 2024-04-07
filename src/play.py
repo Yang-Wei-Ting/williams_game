@@ -69,8 +69,8 @@ class Program:
         """
         Create landscape.
         """
-        LANDS = [getattr(Image, f"land_{i}") for i in range(1, 15)]
-        WEIGHTS = (2, 2, 3, 3, 4, 4, 5, 4, 4, 3, 3, 2, 2, 3)
+        LANDS = [getattr(Image, f"land_{i}") for i in range(1, 11)]
+        WEIGHTS = (30, 15, 14, 14, 7, 6, 5, 4, 3, 2)
 
         for y in range(C.VERTICAL_TILE_COUNT):
             for x in range(C.HORIZONTAL_LAND_TILE_COUNT):
