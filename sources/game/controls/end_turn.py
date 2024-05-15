@@ -1,11 +1,13 @@
 import tkinter as tk
 from collections.abc import Iterator
+from math import ceil
 from random import choice, sample
 
 from game.base import GameObject
 from game.controls.display_outcome import DisplayOutcomeControl
 from game.miscellaneous import Configuration as C
 from game.soldiers import Archer, Cavalry, Infantry
+from game.soldiers.base import Soldier
 from game.states import BuildingState, ControlState, DisplayState, GameState, SoldierState
 
 
@@ -110,40 +112,25 @@ class EndTurnControl(GameObject):
             *[(x, V - 1) for x in range(1, 3)],         #    2
         ]
 
-        def get_random_area():
-            return choice([area_north_east, area_north_west, area_south_east, area_south_west])
+        def sample_n_coordinates_from_m_areas(n: int, m: int) -> list:
+            coordinates = []
+            for area in sample([area_north_east, area_north_west, area_south_east, area_south_west], m):
+                coordinates.extend(area)
+            return sample(coordinates, n)
 
-        def get_random_common_soldier():
+        def sample_common_soldiers() -> Soldier:
             return choice([Archer, Cavalry, Infantry])
 
-        GameState.wave = 1
-        Infantry(self._canvas, *choice(get_random_area()), color=C.RED)
-        yield
+        common_soldiers = {Archer, Cavalry, Infantry}
+        while common_soldiers:
+            GameState.wave += 1
+            [(x, y)] = sample_n_coordinates_from_m_areas(1, 1)
+            common_soldiers.pop()(self._canvas, x, y, color=C.RED)
+            yield
 
-        GameState.wave = 2
-        Archer(self._canvas, *choice(get_random_area()), color=C.RED)
-        yield
-
-        GameState.wave = 3
-        Cavalry(self._canvas, *choice(get_random_area()), color=C.RED)
-        yield
-
-        GameState.wave = 4
-        for coordinate in sample(get_random_area(), 2):
-            get_random_common_soldier()(self._canvas, *coordinate, color=C.RED)
-        yield
-
-        GameState.wave = 5
-        for coordinate in sample(get_random_area(), 3):
-            get_random_common_soldier()(self._canvas, *coordinate, color=C.RED)
-        yield
-
-        GameState.wave = 6
-        for coordinate in sample(get_random_area(), 4):
-            get_random_common_soldier()(self._canvas, *coordinate, color=C.RED)
-        yield
-
-        GameState.wave = 7
-        for coordinate in sample(get_random_area(), 5):
-            get_random_common_soldier()(self._canvas, *coordinate, color=C.RED)
-        yield
+        for n in range(2, 18 + 1, 2):
+            m = ceil(n / 6)
+            GameState.wave += 1
+            for x, y in sample_n_coordinates_from_m_areas(n, m):
+                sample_common_soldiers()(self._canvas, x, y, color=C.RED)
+            yield
