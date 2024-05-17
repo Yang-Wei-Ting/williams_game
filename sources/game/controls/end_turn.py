@@ -71,7 +71,7 @@ class EndTurnControl(GameObject):
             GameState.day += 1
             DisplayState.day_display.refresh_widgets()
             for ally in SoldierState.allied_soldiers:
-                ally.restore_health_by(5)
+                ally.restore_health_by(10)
             yield
 
             GameState.day += 1
@@ -86,10 +86,10 @@ class EndTurnControl(GameObject):
 
             GameState.day += 1
             DisplayState.day_display.refresh_widgets()
-            GameState.coin += GameState.wave * 5
+            GameState.coin += 8 + (GameState.wave * 2)
             DisplayState.coin_display.refresh_widgets()
             for ally in SoldierState.allied_soldiers:
-                ally.restore_health_by(5)
+                ally.restore_health_by(10)
             yield
 
     def _wave_generator_function(self) -> Iterator[None]:

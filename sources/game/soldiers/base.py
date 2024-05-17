@@ -14,15 +14,15 @@ from game.states import BuildingState, ControlState, GameState, HighlightState, 
 class Soldier(GameObject):
 
     attack = 30
+    attack_multipliers = {}
     attack_range = 1
-    defense = 15
-    health = 70
+
+    defense = 0.15
+    health = 100
+
     mobility = 2
 
-    @property
-    @abstractmethod
-    def counters(self) -> set:
-        raise NotImplementedError
+    cost = 10
 
     @property
     def _health_bar_configuration(self) -> dict:
@@ -138,8 +138,8 @@ class Soldier(GameObject):
         while self.experience >= LEVEL_UP_EXPERIENCE_BY_LEVEL[self.level]:
             self.experience -= LEVEL_UP_EXPERIENCE_BY_LEVEL[self.level]
             self.level += 1
-            self.attack += 3
-            self.defense += 2
+            self.attack *= 1.2
+            self.defense += 0.05
 
         self.refresh_widgets()
 
@@ -223,13 +223,8 @@ class Soldier(GameObject):
         # TODO: When other is surrounded by obstacles, self should try to approach it.
         return start
 
-    def _get_damage_output_against(self, other) -> int:
-        if type(other).__name__ in self.counters:
-            multiplier = 1.6
-        else:
-            multiplier = 1.0
-
-        return max(int(self.attack * multiplier - other.defense), 0)
+    def _get_damage_output_against(self, other) -> float:
+        return self.attack * self.attack_multipliers.get(type(other).__name__, 1.0) * (1.0 - other.defense)
 
     def _handle_ally_click_event(self) -> None:
         match GameState.selected_game_objects:

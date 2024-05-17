@@ -2,7 +2,7 @@ class GameState:
 
     day = 1
     wave = 0
-    coin = 0
+    coin = 10
     occupied_coordinates = set()
     selected_game_objects = []
 
