@@ -1,7 +1,7 @@
 import tkinter as tk
 from unittest import TestCase, main
 
-from game.miscs import Image
+from game.miscellaneous import Image
 
 
 class ImageTest(TestCase):

@@ -1,7 +1,7 @@
 import tkinter as tk
 from unittest import TestCase, mock
 
-from game.states import BuildingState, ControlState, GameState, HighlightState, SoldierState
+from game.states import BuildingState, ControlState, GameState, HighlightState, RecruitmentState, SoldierState
 from play import Program
 
 
@@ -29,28 +29,28 @@ class BaseTest(TestCase):
             SoldierState.allied_soldiers | SoldierState.enemy_soldiers |
             BuildingState.critical_buildings | BuildingState.noncritical_buildings
         ):
-            try:
-                obj.detach_widgets_from_canvas()
-            except AttributeError:
-                pass
+            obj.detach_and_destroy_widgets()
 
-            obj.destroy_widgets()
-
-        self.assertEqual(GameState.occupied_coordinates, set())
         GameState.day = 1
         GameState.wave = 0
         GameState.coin = 0
+        self.assertEqual(GameState.occupied_coordinates, set())
         self.assertEqual(GameState.selected_game_objects, [])
-        self.assertEqual(SoldierState.allied_soldiers, set())
-        self.assertEqual(SoldierState.enemy_soldiers, set())
+
         self.assertEqual(BuildingState.critical_buildings, set())
         self.assertEqual(BuildingState.noncritical_buildings, set())
-        self.assertIsNone(HighlightState.attack_range)
-        self.assertEqual(HighlightState.movements, set())
-        self.assertEqual(HighlightState.placements, set())
-        self.assertEqual(ControlState.recruit_soldier_controls, set())
-        if ControlState.pop_up_control:
-            ControlState.pop_up_control.handle_click_event()
+
+        if ControlState.display_outcome_control:
+            ControlState.display_outcome_control.handle_click_event()
+
+        self.assertIsNone(HighlightState.attack_range_highlight)
+        self.assertEqual(HighlightState.movement_highlights, set())
+        self.assertEqual(HighlightState.placement_highlights, set())
+
+        self.assertEqual(RecruitmentState.barrack_recruitments, set())
+
+        self.assertEqual(SoldierState.allied_soldiers, set())
+        self.assertEqual(SoldierState.enemy_soldiers, set())
 
     @classmethod
     def tearDownClass(cls):
