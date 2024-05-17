@@ -2,18 +2,19 @@ import tkinter as tk
 from tkinter.ttk import Progressbar
 from unittest import main, mock
 
-from game.miscs import Configuration as C
-from game.miscs import Image, get_pixels
-from game.soldiers import Archer, Cavalry, Infantry, King, Soldier
+from game.miscellaneous import Configuration as C
+from game.miscellaneous import Image, get_pixels
+from game.soldiers import Archer, Cavalry, Hero, Infantry
+from game.soldiers.base import Soldier
 from game.states import GameState, HighlightState, SoldierState
 from game.test_bases import BaseTest
 
 
 class SoldierStatsTest(BaseTest):
 
-    def test_king_stats(self):
-        ally = King(self.program._canvas, 5, 6, color=C.BLUE)
-        enemy = King(self.program._canvas, 5, 5, color=C.RED)
+    def test_hero_stats(self):
+        ally = Hero(self.program._canvas, 5, 6, color=C.BLUE)
+        enemy = Hero(self.program._canvas, 5, 5, color=C.RED)
         self.process_events()
 
         # Should have superior defense, health, and mobility
@@ -62,33 +63,33 @@ class SoldierStatsTest(BaseTest):
 
 class SoldierCountersTest(BaseTest):
 
-    def test_king_counters(self):
-        ally = King(self.program._canvas, 5, 6, color=C.BLUE)
-        enemy = King(self.program._canvas, 5, 5, color=C.RED)
+    def test_hero_counters(self):
+        ally = Hero(self.program._canvas, 5, 6, color=C.BLUE)
+        enemy = Hero(self.program._canvas, 5, 5, color=C.RED)
         self.process_events()
 
-        self.assertTrue(ally.counters == enemy.counters == {King, Archer, Cavalry, Infantry})
+        self.assertTrue(ally.counters == enemy.counters == {"Hero", "Archer", "Cavalry", "Infantry"})
 
     def test_archer_counters(self):
         ally = Archer(self.program._canvas, 5, 6, color=C.BLUE)
         enemy = Archer(self.program._canvas, 5, 5, color=C.RED)
         self.process_events()
 
-        self.assertTrue(ally.counters == enemy.counters == {Infantry})
+        self.assertTrue(ally.counters == enemy.counters == {"Infantry"})
 
     def test_cavalry_counters(self):
         ally = Cavalry(self.program._canvas, 5, 6, color=C.BLUE)
         enemy = Cavalry(self.program._canvas, 5, 5, color=C.RED)
         self.process_events()
 
-        self.assertTrue(ally.counters == enemy.counters == {Archer})
+        self.assertTrue(ally.counters == enemy.counters == {"Archer"})
 
     def test_infantry_counters(self):
         ally = Infantry(self.program._canvas, 5, 6, color=C.BLUE)
         enemy = Infantry(self.program._canvas, 5, 5, color=C.RED)
         self.process_events()
 
-        self.assertTrue(ally.counters == enemy.counters == {Cavalry})
+        self.assertTrue(ally.counters == enemy.counters == {"Cavalry"})
 
 
 class SoldierCreationTest(BaseTest):
@@ -130,14 +131,14 @@ class SoldierCreationTest(BaseTest):
         self.assertEqual(ally._main_widget["relief"], tk.RAISED)
         self.assertEqual(ally._main_widget["state"], tk.NORMAL)
 
-        self.assertIsInstance(ally.healthbar, Progressbar)
-        self.assertIs(ally.healthbar.master, ally._canvas)
-        self.assertEqual(ally.healthbar["length"], C.HEALTH_BAR_LENGTH)
-        self.assertEqual(ally.healthbar["maximum"], ally.health)
-        self.assertEqual(ally.healthbar["mode"].string, "determinate")
-        self.assertEqual(ally.healthbar["orient"].string, tk.HORIZONTAL)
-        self.assertEqual(ally.healthbar["style"], "TProgressbar")
-        self.assertEqual(ally.healthbar["value"], ally.health)
+        self.assertIsInstance(ally.health_bar, Progressbar)
+        self.assertIs(ally.health_bar.master, ally._canvas)
+        self.assertEqual(ally.health_bar["length"], C.HEALTH_BAR_LENGTH)
+        self.assertEqual(ally.health_bar["maximum"], ally.health)
+        self.assertEqual(ally.health_bar["mode"].string, "determinate")
+        self.assertEqual(ally.health_bar["orient"].string, tk.HORIZONTAL)
+        self.assertEqual(ally.health_bar["style"], "TProgressbar")
+        self.assertEqual(ally.health_bar["value"], ally.health)
 
         self.assertEqual(GameState.occupied_coordinates, {ally_coordinate})
         self.assertEqual(SoldierState.allied_soldiers, {ally})
@@ -150,7 +151,7 @@ class SoldierCreationTest(BaseTest):
         )
         self.mock_create_window.assert_any_call(
             *get_pixels(ally.x, ally.y, y_pixel_shift=-22.5),
-            window=ally.healthbar,
+            window=ally.health_bar,
         )
 
     def test_ally_creation_without_attachment(self):
@@ -187,14 +188,14 @@ class SoldierCreationTest(BaseTest):
         self.assertEqual(enemy._main_widget["relief"], tk.RAISED)
         self.assertEqual(enemy._main_widget["state"], tk.NORMAL)
 
-        self.assertIsInstance(enemy.healthbar, Progressbar)
-        self.assertIs(enemy.healthbar.master, enemy._canvas)
-        self.assertEqual(enemy.healthbar["length"], C.HEALTH_BAR_LENGTH)
-        self.assertEqual(enemy.healthbar["maximum"], enemy.health)
-        self.assertEqual(enemy.healthbar["mode"].string, "determinate")
-        self.assertEqual(enemy.healthbar["orient"].string, tk.HORIZONTAL)
-        self.assertEqual(enemy.healthbar["style"], "TProgressbar")
-        self.assertEqual(enemy.healthbar["value"], enemy.health)
+        self.assertIsInstance(enemy.health_bar, Progressbar)
+        self.assertIs(enemy.health_bar.master, enemy._canvas)
+        self.assertEqual(enemy.health_bar["length"], C.HEALTH_BAR_LENGTH)
+        self.assertEqual(enemy.health_bar["maximum"], enemy.health)
+        self.assertEqual(enemy.health_bar["mode"].string, "determinate")
+        self.assertEqual(enemy.health_bar["orient"].string, tk.HORIZONTAL)
+        self.assertEqual(enemy.health_bar["style"], "TProgressbar")
+        self.assertEqual(enemy.health_bar["value"], enemy.health)
 
         self.assertEqual(GameState.occupied_coordinates, {enemy_coordinate})
         self.assertEqual(SoldierState.allied_soldiers, set())
@@ -207,7 +208,7 @@ class SoldierCreationTest(BaseTest):
         )
         self.mock_create_window.assert_any_call(
             *get_pixels(enemy.x, enemy.y, y_pixel_shift=-22.5),
-            window=enemy.healthbar,
+            window=enemy.health_bar,
         )
 
     def test_enemy_creation_without_attachment(self):
@@ -231,12 +232,12 @@ class SoldierClickTest(BaseTest):
         self.assertEqual(GameState.occupied_coordinates, {ally_coordinate})
         self.assertEqual(SoldierState.allied_soldiers, {ally})
         self.assertEqual(SoldierState.enemy_soldiers, set())
-        self.assertIsNotNone(HighlightState.attack_range)
+        self.assertIsNotNone(HighlightState.attack_range_highlight)
         self.assertEqual(
-            (HighlightState.attack_range.x, HighlightState.attack_range.y),
+            (HighlightState.attack_range_highlight.x, HighlightState.attack_range_highlight.y),
             ally_coordinate,
         )
-        self.assertNotEqual(HighlightState.movements, set())
+        self.assertNotEqual(HighlightState.movement_highlights, set())
 
     def test_click_on_an_ally_twice(self):
         ally_coordinate = (5, 6)
@@ -250,8 +251,8 @@ class SoldierClickTest(BaseTest):
         self.assertEqual(GameState.occupied_coordinates, {ally_coordinate})
         self.assertEqual(SoldierState.allied_soldiers, {ally})
         self.assertEqual(SoldierState.enemy_soldiers, set())
-        self.assertIsNone(HighlightState.attack_range)
-        self.assertEqual(HighlightState.movements, set())
+        self.assertIsNone(HighlightState.attack_range_highlight)
+        self.assertEqual(HighlightState.movement_highlights, set())
 
     def test_click_on_an_ally_then_click_on_another_ally(self):
         ally1_coordinate = (5, 6)
@@ -268,12 +269,12 @@ class SoldierClickTest(BaseTest):
         self.assertEqual(GameState.occupied_coordinates, {ally1_coordinate, ally2_coordinate})
         self.assertEqual(SoldierState.allied_soldiers, {ally1, ally2})
         self.assertEqual(SoldierState.enemy_soldiers, set())
-        self.assertIsNotNone(HighlightState.attack_range)
+        self.assertIsNotNone(HighlightState.attack_range_highlight)
         self.assertEqual(
-            (HighlightState.attack_range.x, HighlightState.attack_range.y),
+            (HighlightState.attack_range_highlight.x, HighlightState.attack_range_highlight.y),
             ally2_coordinate,
         )
-        self.assertNotEqual(HighlightState.movements, set())
+        self.assertNotEqual(HighlightState.movement_highlights, set())
 
     def test_click_on_an_enemy(self):
         enemy_coordinate = (5, 6)
@@ -286,14 +287,14 @@ class SoldierClickTest(BaseTest):
         self.assertEqual(GameState.occupied_coordinates, {enemy_coordinate})
         self.assertEqual(SoldierState.allied_soldiers, set())
         self.assertEqual(SoldierState.enemy_soldiers, {enemy})
-        self.assertIsNone(HighlightState.attack_range)
-        self.assertEqual(HighlightState.movements, set())
+        self.assertIsNone(HighlightState.attack_range_highlight)
+        self.assertEqual(HighlightState.movement_highlights, set())
 
     def test_click_on_an_ally_then_click_on_one_of_its_available_movements(self):
         ally_coordinate = (5, 6)
         ally = Infantry(self.program._canvas, *ally_coordinate, color=C.BLUE)
         ally.handle_click_event()
-        movement = HighlightState.movements.pop()
+        movement = HighlightState.movement_highlights.pop()
         movement.handle_click_event()
         self.process_events()
 
@@ -303,8 +304,8 @@ class SoldierClickTest(BaseTest):
         self.assertEqual(GameState.occupied_coordinates, {(movement.x, movement.y)})
         self.assertEqual(SoldierState.allied_soldiers, {ally})
         self.assertEqual(SoldierState.enemy_soldiers, set())
-        self.assertIsNone(HighlightState.attack_range)
-        self.assertEqual(HighlightState.movements, set())
+        self.assertIsNone(HighlightState.attack_range_highlight)
+        self.assertEqual(HighlightState.movement_highlights, set())
 
     def test_click_on_an_ally_then_click_on_an_enemy_within_its_attack_range(self):
         ally_coordinate = (5, 6)
@@ -317,8 +318,8 @@ class SoldierClickTest(BaseTest):
 
         self.assertEqual(ally._main_widget["background"], C.BLUE)
         self.assertEqual(GameState.selected_game_objects, [])
-        self.assertIsNone(HighlightState.attack_range)
-        self.assertEqual(HighlightState.movements, set())
+        self.assertIsNone(HighlightState.attack_range_highlight)
+        self.assertEqual(HighlightState.movement_highlights, set())
 
     def test_click_on_an_ally_then_click_on_an_enemy_outside_its_attack_range(self):
         ally = Infantry(self.program._canvas, 5, 6, color=C.BLUE)
@@ -331,9 +332,9 @@ class SoldierClickTest(BaseTest):
         self.assertEqual(len(GameState.selected_game_objects), 1)
         self.assertIs(GameState.selected_game_objects[0], ally)
         # The ally's attack range should be displayed
-        self.assertIsNotNone(HighlightState.attack_range)
+        self.assertIsNotNone(HighlightState.attack_range_highlight)
         # The ally's available movements should be displayed
-        self.assertNotEqual(HighlightState.movements, set())
+        self.assertNotEqual(HighlightState.movement_highlights, set())
         # The ally should be active
         self.assertEqual(ally._main_widget["background"], C.BLUE)
         # The enemy should not be attacked
@@ -343,7 +344,7 @@ class SoldierClickTest(BaseTest):
         ally = Infantry(self.program._canvas, 5, 6, color=C.BLUE)
         enemy = Infantry(self.program._canvas, 5, 4, color=C.RED)
         ally.handle_click_event()
-        next(m for m in HighlightState.movements if (m.x, m.y) == (5, 5)).handle_click_event()
+        next(m for m in HighlightState.movement_highlights if (m.x, m.y) == (5, 5)).handle_click_event()
         ally.handle_click_event()
         enemy.handle_click_event()
         self.process_events()
@@ -351,9 +352,9 @@ class SoldierClickTest(BaseTest):
         # The ally should be unselected
         self.assertEqual(GameState.selected_game_objects, [])
         # The ally's attack range should not be displayed
-        self.assertIsNone(HighlightState.attack_range)
+        self.assertIsNone(HighlightState.attack_range_highlight)
         # The ally's available movements should not be displayed
-        self.assertEqual(HighlightState.movements, set())
+        self.assertEqual(HighlightState.movement_highlights, set())
         # The ally should be inactive
         self.assertEqual(ally._main_widget["background"], C.GRAY)
 
@@ -363,15 +364,15 @@ class SoldierClickTest(BaseTest):
         ally.handle_click_event()
         enemy.handle_click_event()
         ally.handle_click_event()
-        next(m for m in HighlightState.movements if (m.x, m.y) == (5, 7)).handle_click_event()
+        next(m for m in HighlightState.movement_highlights if (m.x, m.y) == (5, 7)).handle_click_event()
         self.process_events()
 
         # The ally should be unselected
         self.assertEqual(GameState.selected_game_objects, [])
         # The ally's attack range should not be displayed
-        self.assertIsNone(HighlightState.attack_range)
+        self.assertIsNone(HighlightState.attack_range_highlight)
         # The ally's available movements should not be displayed
-        self.assertEqual(HighlightState.movements, set())
+        self.assertEqual(HighlightState.movement_highlights, set())
         # The ally should be inactive
         self.assertEqual(ally._main_widget["background"], C.GRAY)
 
@@ -433,9 +434,9 @@ class SoldierComputerPathfindingTest(BaseTest):
         self.assertEqual(coordinate, (4, 2))
 
 
-@mock.patch("game.soldiers.Soldier.promote")
-@mock.patch("game.soldiers.Soldier.assault")
-@mock.patch("game.soldiers.Soldier.move_to")
+@mock.patch("game.soldiers.base.Soldier.promote")
+@mock.patch("game.soldiers.base.Soldier.assault")
+@mock.patch("game.soldiers.base.Soldier.move_to")
 class SoldierComputerTargetSelectionTest(BaseTest):
 
     def test_killable_target_should_be_preferred_over_hittable_or_untouchable_targets(
