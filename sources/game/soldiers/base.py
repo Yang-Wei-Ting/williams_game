@@ -37,6 +37,17 @@ class Soldier(GameObject):
 
     def __init__(self, canvas: tk.Canvas, x: int, y: int, *, color: str, attach: bool = True) -> None:
         self.color = color
+
+        match self.color:
+            case C.BLUE:
+                self._friends = SoldierState.allied_soldiers
+                self._foes = SoldierState.enemy_soldiers
+                self.handle_click_event = self._handle_ally_click_event
+            case C.RED:
+                self._friends = SoldierState.enemy_soldiers
+                self._foes = SoldierState.allied_soldiers
+                self.handle_click_event = self._handle_enemy_click_event
+
         self.level = 1
         self.experience = 0
         self.attacked_this_turn = False
@@ -55,25 +66,11 @@ class Soldier(GameObject):
 
     def _register(self) -> None:
         GameState.occupied_coordinates.add((self.x, self.y))
-        self._get_friends().add(self)
+        self._friends.add(self)
 
     def _unregister(self) -> None:
         GameState.occupied_coordinates.remove((self.x, self.y))
-        self._get_friends().remove(self)
-
-    def _get_friends(self) -> set:
-        FRIENDS_BY_COLOR = {
-            C.BLUE: SoldierState.allied_soldiers,
-            C.RED: SoldierState.enemy_soldiers,
-        }
-        return FRIENDS_BY_COLOR[self.color]
-
-    def _get_foes(self) -> set:
-        FOES_BY_COLOR = {
-            C.BLUE: SoldierState.enemy_soldiers,
-            C.RED: SoldierState.allied_soldiers,
-        }
-        return FOES_BY_COLOR[self.color]
+        self._friends.remove(self)
 
     def attach_widgets_to_canvas(self) -> None:
         self._main_widget_id = self._canvas.create_window(
@@ -162,7 +159,7 @@ class Soldier(GameObject):
         MOVE = 3
 
         heap = []
-        for i, other in enumerate(self._get_foes() | BuildingState.critical_buildings):
+        for i, other in enumerate(self._foes | BuildingState.critical_buildings):
             coordinate = self._get_coordinate_after_moving_toward(other)
             distance = other.get_distance_between(coordinate)
             damage = self._get_damage_output_against(other)
@@ -233,13 +230,6 @@ class Soldier(GameObject):
             multiplier = 1.0
 
         return max(int(self.attack * multiplier - other.defense), 0)
-
-    def handle_click_event(self) -> None:
-        EVENT_HANDLER_BY_COLOR = {
-            C.BLUE: self._handle_ally_click_event,
-            C.RED: self._handle_enemy_click_event,
-        }
-        EVENT_HANDLER_BY_COLOR[self.color]()
 
     def _handle_ally_click_event(self) -> None:
         match GameState.selected_game_objects:
