@@ -2,6 +2,7 @@ import tkinter as tk
 from collections.abc import Iterator
 from math import ceil
 from random import choice, sample
+from tkinter import ttk
 
 from game.base import GameObject
 from game.controls.display_outcome import DisplayOutcomeControl
@@ -13,21 +14,20 @@ from game.states import BuildingState, ControlState, DisplayState, GameState, So
 
 class EndTurnControl(GameObject):
 
-    @property
-    def _main_widget_configuration(self) -> dict:
-        return {
-            **super()._main_widget_configuration,
-            "command": self.handle_click_event,
-            "cursor": "hand2",
-            "state": tk.NORMAL,
-            "text": "End turn",
-            "width": 8,
-        }
-
     def __init__(self, canvas: tk.Canvas, x: int, y: int, *, attach: bool = True) -> None:
         self._day_generator_iterator = self._day_generator_function()
         self._wave_generator_iterator = self._wave_generator_function()
         super().__init__(canvas, x, y, attach=attach)
+
+    def _create_widgets(self) -> None:
+        self._main_widget = ttk.Button(
+            self._canvas,
+            command=self.handle_click_event,
+            cursor="hand2",
+            style="SmallText.Black_Burlywood4.TButton",
+            takefocus=False,
+            text="End turn",
+        )
 
     def _register(self) -> None:
         ControlState.end_turn_control = self

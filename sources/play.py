@@ -5,13 +5,12 @@
 
 import tkinter as tk
 from random import choices
-from tkinter.ttk import Style
 
 from game.buildings import Barrack
 from game.controls import EndTurnControl, RestartGameControl
 from game.displays import CoinDisplay, DayDisplay
 from game.miscellaneous import Configuration as C
-from game.miscellaneous import Image, get_pixels
+from game.miscellaneous import Image, Style, get_pixels
 from game.soldiers import Hero
 
 
@@ -32,12 +31,12 @@ class Program:
         self._canvas.pack()
 
         Image.initialize()
+        Style.initialize()
 
         self._create_landscape()
         self._create_displays()
         self._create_controls()
 
-        self._initialize_health_bar_style()
         self._create_initial_buildings()
         self._create_initial_allied_soldiers()
 
@@ -85,19 +84,6 @@ class Program:
             self._canvas,
             C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
             C.VERTICAL_TILE_COUNT - 1,
-        )
-
-    def _initialize_health_bar_style(self) -> None:
-        self._style = Style()
-        self._style.theme_use("default")
-        self._style.configure(
-            "TProgressbar",
-            background="Green",
-            bordercolor="Red",
-            darkcolor="Green",
-            lightcolor="Green",
-            troughcolor="Red",
-            thickness=5,
         )
 
     def _create_initial_buildings(self) -> None:

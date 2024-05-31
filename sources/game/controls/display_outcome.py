@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 
 from game.base import GameObject
 from game.miscellaneous import Configuration as C
@@ -6,17 +7,6 @@ from game.states import ControlState
 
 
 class DisplayOutcomeControl(GameObject):
-
-    @property
-    def _main_widget_configuration(self) -> dict:
-        return {
-            **super()._main_widget_configuration,
-            "command": self.handle_click_event,
-            "cursor": "hand2",
-            "font": ("Times New Roman", 36, "bold italic"),
-            "state": tk.NORMAL,
-            "text": self._text,
-        }
 
     def __init__(self, canvas: tk.Canvas, *, text: str, attach: bool = True) -> None:
         if ControlState.display_outcome_control:
@@ -26,6 +16,16 @@ class DisplayOutcomeControl(GameObject):
         x = C.HORIZONTAL_LAND_TILE_COUNT // 2
         y = C.VERTICAL_TILE_COUNT // 2
         super().__init__(canvas, x, y, attach=attach)
+
+    def _create_widgets(self) -> None:
+        self._main_widget = ttk.Button(
+            self._canvas,
+            command=self.handle_click_event,
+            cursor="hand2",
+            style="BigText.Black_Burlywood4.TButton",
+            takefocus=False,
+            text=self._text,
+        )
 
     def _register(self) -> None:
         ControlState.display_outcome_control = self
