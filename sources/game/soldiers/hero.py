@@ -15,6 +15,9 @@ class Hero(Soldier):
         "Hero": 1.5,
         "Infantry": 1.5,
     }
-    cost = math.inf
+
     health = 200
+
     mobility = 3
+
+    cost = math.inf
