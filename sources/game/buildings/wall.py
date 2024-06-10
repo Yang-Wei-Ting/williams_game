@@ -4,8 +4,8 @@ from game.states import BuildingState
 
 class Wall(Building):
 
-    defense = 15
-    health = 200
+    defense = 0.5
+    health = 100
 
     def _register(self) -> None:
         super()._register()

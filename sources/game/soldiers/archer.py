@@ -3,14 +3,13 @@ from game.soldiers.base import Soldier
 
 class Archer(Soldier):
     """
-    Soldier with high attack range but low attack and health.
+    Soldier with high attack range.
     Counter infantries, countered by cavalries.
     """
 
-    attack = 25
+    attack_multipliers = {
+        "Cavalry": 0.9,
+        "Hero": 0.9,
+        "Infantry": 1.5,
+    }
     attack_range = 3
-    health = 50
-
-    @property
-    def counters(self) -> set:
-        return {"Infantry"}

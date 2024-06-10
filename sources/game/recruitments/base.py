@@ -27,7 +27,7 @@ class SoldierRecruitment(GameObject):
         RecruitmentState.barrack_recruitments.remove(self)
 
     def refresh_widgets(self) -> None:
-        if GameState.coin >= self.cost:
+        if GameState.coin >= self.target.cost:
             color = C.BLUE
         else:
             color = C.GRAY

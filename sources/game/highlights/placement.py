@@ -31,7 +31,7 @@ class PlacementHighlight(GameObject):
     def handle_click_event(self) -> None:
         recruitment = GameState.selected_game_objects[-1]
 
-        GameState.coin -= recruitment.cost
+        GameState.coin -= recruitment.target.cost
         DisplayState.coin_display.refresh_widgets()
         for _recruitment in RecruitmentState.barrack_recruitments:
             _recruitment.refresh_widgets()

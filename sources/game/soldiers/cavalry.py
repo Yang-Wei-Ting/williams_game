@@ -7,8 +7,10 @@ class Cavalry(Soldier):
     Counter archers, countered by infantries.
     """
 
-    mobility = 3
+    attack_multipliers = {
+        "Archer": 1.5,
+        "Hero": 0.9,
+        "Infantry": 0.9,
+    }
 
-    @property
-    def counters(self) -> set:
-        return {"Archer"}
+    mobility = 3
