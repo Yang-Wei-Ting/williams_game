@@ -9,8 +9,8 @@ class Cavalry(Soldier):
 
     attack_multipliers = {
         "Archer": 1.5,
-        "Hero": 0.9,
-        "Infantry": 0.9,
+        "Hero": 0.7,
+        "Infantry": 0.7,
     }
 
     mobility = 3
