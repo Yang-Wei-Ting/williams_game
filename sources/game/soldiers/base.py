@@ -82,12 +82,9 @@ class Soldier(GameObject):
         super().detach_widgets_from_canvas()
 
     def refresh_widgets(self) -> None:
-        if self.attacked_this_turn and self.moved_this_turn:
-            color = C.GRAY
-        else:
-            color = self.color
+        is_exhausted = self.attacked_this_turn and self.moved_this_turn
 
-        color_name = C.COLOR_NAME_BY_HEX_TRIPLET[color]
+        color_name = C.COLOR_NAME_BY_HEX_TRIPLET[C.GRAY if is_exhausted else self.color]
         soldier_name = type(self).__name__.lower()
 
         self._main_widget.configure(
@@ -97,7 +94,7 @@ class Soldier(GameObject):
         )
 
         if self.color == C.BLUE:
-            if self.attacked_this_turn and self.moved_this_turn:
+            if is_exhausted:
                 self._main_widget.unbind("<ButtonPress-1>")
             else:
                 self._main_widget.bind("<ButtonPress-1>", self._handle_ally_press_event)
@@ -255,7 +252,9 @@ class Soldier(GameObject):
             while frontier:
                 current = frontier.pop()
 
-                new_cost = cost_table[current] + 1
+                if cost_table[current] == self.mobility:
+                    continue
+
                 for dx, dy in {(1, 0), (0, 1), (-1, 0), (0, -1)}:
                     x, y = current[0] + dx, current[1] + dy
                     if (
@@ -263,10 +262,9 @@ class Soldier(GameObject):
                         and 0 < y < C.VERTICAL_TILE_COUNT - 1
                         and (x, y) not in GameState.occupied_coordinates
                         and (x, y) not in cost_table
-                        and new_cost <= self.mobility
                     ):
                         frontier.add((x, y))
-                        cost_table[(x, y)] = new_cost
+                        cost_table[(x, y)] = cost_table[current] + 1
 
                         highlight = MovementHighlight(self._canvas, x, y)
                         self._movement_target_by_id[highlight._main_widget_id] = highlight
