@@ -1,6 +1,7 @@
 import tkinter as tk
 from glob import glob
 from pathlib import PurePath
+from tkinter import ttk
 
 
 class Configuration:
@@ -19,7 +20,7 @@ class Configuration:
 
     # In pixels
     TILE_DIMENSION = 60
-    HEALTH_BAR_LENGTH = 50
+    HEALTH_BAR_LENGTH = 45
 
     HORIZONTAL_LAND_TILE_COUNT = 21
     HORIZONTAL_SHORE_TILE_COUNT = 1
@@ -39,6 +40,69 @@ class Image:
         """
         for path in glob("images/*"):
             setattr(cls, PurePath(path).stem, tk.PhotoImage(file=path))
+
+
+class Style:
+
+    @classmethod
+    def initialize(cls) -> None:
+        style = ttk.Style()
+        style.theme_use("default")
+
+        style.configure(
+            "TButton",
+            anchor=tk.CENTER,
+            borderwidth=3,
+            focusthickness=0,
+            padding=0,
+            relief=tk.RAISED,
+            width=-1,
+        )
+        style.map(
+            "Black_Burlywood4.TButton",
+            background=[("Burlywood4",)],
+            foreground=[("Black",)],
+        )
+        style.map(
+            "CustomBlue.TButton",
+            background=[(Configuration.BLUE,)],
+        )
+        style.map(
+            "CustomGray.TButton",
+            background=[(Configuration.GRAY,)],
+        )
+        style.map(
+            "CustomRed.TButton",
+            background=[(Configuration.RED,)],
+        )
+        style.map(
+            "Royalblue1.TButton",
+            background=[("Royalblue1",)],
+        )
+        style.configure(
+            "BigText.Black_Burlywood4.TButton",
+            font=("Times New Roman", 36, "bold italic"),
+            padding=9,
+        )
+        style.configure(
+            "SmallText.Black_Burlywood4.TButton",
+            font=("Times New Roman", 18, "bold"),
+            padding=3,
+            width=9,
+        )
+        style.configure(
+            "Flat.Royalblue1.TButton",
+            borderwidth=0,
+            relief=tk.FLAT,
+        )
+
+        style.configure(
+            "Green_Red.Horizontal.TProgressbar",
+            background="Green",
+            borderwidth=0,
+            thickness=5,
+            troughcolor="Red",
+        )
 
 
 def get_pixels(x: int, y: int, *, x_pixel_shift: float = 0.0, y_pixel_shift: float = 0.0) -> tuple:

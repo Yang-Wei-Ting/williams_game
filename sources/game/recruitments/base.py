@@ -1,5 +1,5 @@
-import tkinter as tk
 from abc import abstractmethod
+from tkinter import ttk
 
 from game.base import GameObject
 from game.highlights import PlacementHighlight
@@ -17,7 +17,7 @@ class SoldierRecruitment(GameObject):
         raise NotImplementedError
 
     def _create_widgets(self) -> None:
-        super()._create_widgets()
+        self._main_widget = ttk.Button(self._canvas, takefocus=False)
         self.refresh_widgets()
 
     def _register(self) -> None:
@@ -36,12 +36,10 @@ class SoldierRecruitment(GameObject):
         soldier_name = self.target.__name__.lower()
 
         self._main_widget.configure(
-            activebackground=color,
-            background=color,
             command=(self.handle_click_event if color == C.BLUE else (lambda: None)),
             cursor="hand2",
             image=getattr(Image, f"{color_name}_{soldier_name}_1"),
-            state=tk.NORMAL,
+            style=f"Custom{color_name.capitalize()}.TButton",
         )
 
     def handle_click_event(self) -> None:

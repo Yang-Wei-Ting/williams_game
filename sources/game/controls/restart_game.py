@@ -1,6 +1,6 @@
 import subprocess
 import sys
-import tkinter as tk
+from tkinter import ttk
 
 from game.base import GameObject
 from game.states import ControlState
@@ -8,16 +8,15 @@ from game.states import ControlState
 
 class RestartGameControl(GameObject):
 
-    @property
-    def _main_widget_configuration(self) -> dict:
-        return {
-            **super()._main_widget_configuration,
-            "command": self.handle_click_event,
-            "cursor": "hand2",
-            "state": tk.NORMAL,
-            "text": "Restart",
-            "width": 8,
-        }
+    def _create_widgets(self) -> None:
+        self._main_widget = ttk.Button(
+            self._canvas,
+            command=self.handle_click_event,
+            cursor="hand2",
+            style="SmallText.Black_Burlywood4.TButton",
+            takefocus=False,
+            text="Restart",
+        )
 
     def _register(self) -> None:
         ControlState.restart_game_control = self

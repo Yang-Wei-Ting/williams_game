@@ -6,26 +6,6 @@ from game.miscellaneous import get_pixels
 
 class GameObject(ABC):
 
-    @property
-    def _main_widget_configuration(self) -> dict:
-        return {
-            "activebackground": "Burlywood4",
-            "activeforeground": "Black",
-            "anchor": tk.CENTER,
-            "background": "Burlywood4",
-            "borderwidth": 5,
-            "command": lambda: None,
-            "cursor": "arrow",
-            "disabledforeground": "Black",
-            "font": ("Times New Roman", 18, "bold"),
-            "foreground": "Black",
-            "highlightthickness": 0,
-            "padx": 0,
-            "pady": 0,
-            "relief": tk.RAISED,
-            "state": tk.DISABLED,
-        }
-
     def __init__(self, canvas: tk.Canvas, x: int, y: int, *, attach: bool = True) -> None:
         self._canvas = canvas
         self.x = x
@@ -41,8 +21,9 @@ class GameObject(ABC):
         self._unregister()
         self._destroy_widgets()
 
+    @abstractmethod
     def _create_widgets(self) -> None:
-        self._main_widget = tk.Button(self._canvas, **self._main_widget_configuration)
+        raise NotImplementedError
 
     def _destroy_widgets(self) -> None:
         self._main_widget.destroy()

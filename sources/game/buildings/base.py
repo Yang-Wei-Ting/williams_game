@@ -1,6 +1,6 @@
 import tkinter as tk
 from abc import abstractmethod
-from tkinter.ttk import Progressbar
+from tkinter import ttk
 
 from game.base import GameObject
 from game.miscellaneous import Configuration as C
@@ -10,32 +10,24 @@ from game.states import GameState
 
 class Building(GameObject):
 
-    @property
-    def _main_widget_configuration(self) -> dict:
-        return {
-            **super()._main_widget_configuration,
-            "activebackground": C.BLUE,
-            "background": C.BLUE,
-            "command": self.handle_click_event,
-            "cursor": "hand2",
-            "image": getattr(Image, type(self).__name__.lower()),
-            "state": tk.NORMAL,
-        }
-
-    @property
-    def _health_bar_configuration(self) -> dict:
-        return {
-            "length": C.HEALTH_BAR_LENGTH,
-            "maximum": self.health,
-            "mode": "determinate",
-            "orient": tk.HORIZONTAL,
-            "style": "TProgressbar",
-            "value": self.health,
-        }
-
     def _create_widgets(self) -> None:
-        super()._create_widgets()
-        self.health_bar = Progressbar(self._canvas, **self._health_bar_configuration)
+        self._main_widget = ttk.Button(
+            self._canvas,
+            command=self.handle_click_event,
+            cursor="hand2",
+            image=getattr(Image, type(self).__name__.lower()),
+            style="CustomBlue.TButton",
+            takefocus=False,
+        )
+        self.health_bar = ttk.Progressbar(
+            self._canvas,
+            length=C.HEALTH_BAR_LENGTH,
+            maximum=self.health,
+            mode="determinate",
+            orient=tk.HORIZONTAL,
+            style="Green_Red.Horizontal.TProgressbar",
+            value=self.health,
+        )
 
     def _destroy_widgets(self) -> None:
         self.health_bar.destroy()

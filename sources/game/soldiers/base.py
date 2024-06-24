@@ -1,8 +1,7 @@
 import heapq
 import math
 import tkinter as tk
-from abc import abstractmethod
-from tkinter.ttk import Progressbar
+from tkinter import ttk
 
 from game.base import GameObject
 from game.highlights import AttackRangeHighlight, MovementHighlight
@@ -24,17 +23,6 @@ class Soldier(GameObject):
 
     cost = 10
 
-    @property
-    def _health_bar_configuration(self) -> dict:
-        return {
-            "length": C.HEALTH_BAR_LENGTH,
-            "maximum": self.health,
-            "mode": "determinate",
-            "orient": tk.HORIZONTAL,
-            "style": "TProgressbar",
-            "value": self.health,
-        }
-
     def __init__(self, canvas: tk.Canvas, x: int, y: int, *, color: str, attach: bool = True) -> None:
         self.color = color
 
@@ -55,9 +43,17 @@ class Soldier(GameObject):
         super().__init__(canvas, x, y, attach=attach)
 
     def _create_widgets(self) -> None:
-        super()._create_widgets()
+        self._main_widget = ttk.Button(self._canvas, takefocus=False)
         self.refresh_widgets()
-        self.health_bar = Progressbar(self._canvas, **self._health_bar_configuration)
+        self.health_bar = ttk.Progressbar(
+            self._canvas,
+            length=C.HEALTH_BAR_LENGTH,
+            maximum=self.health,
+            mode="determinate",
+            orient=tk.HORIZONTAL,
+            style="Green_Red.Horizontal.TProgressbar",
+            value=self.health,
+        )
 
     def _destroy_widgets(self) -> None:
         self.health_bar.destroy()
@@ -97,12 +93,10 @@ class Soldier(GameObject):
         soldier_name = type(self).__name__.lower()
 
         self._main_widget.configure(
-            activebackground=color,
-            background=color,
             command=((lambda: None) if color == C.GRAY else self.handle_click_event),
             cursor="hand2",
             image=getattr(Image, f"{color_name}_{soldier_name}_{self.level}"),
-            state=tk.NORMAL,
+            style=f"Custom{color_name.capitalize()}.TButton",
         )
 
     def move_to(self, x: int, y: int) -> None:

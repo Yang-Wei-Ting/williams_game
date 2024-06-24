@@ -1,19 +1,17 @@
 from abc import abstractmethod
+from tkinter import ttk
 
 from game.base import GameObject
 
 
 class Display(GameObject):
 
-    @property
-    def _main_widget_configuration(self) -> dict:
-        return {
-            **super()._main_widget_configuration,
-            "width": 8,
-        }
-
     def _create_widgets(self) -> None:
-        super()._create_widgets()
+        self._main_widget = ttk.Label(
+            self._canvas,
+            cursor="arrow",
+            style="SmallText.Black_Burlywood4.TButton",
+        )
         self.refresh_widgets()
 
     @abstractmethod
