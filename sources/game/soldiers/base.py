@@ -30,11 +30,9 @@ class Soldier(GameObject):
             case C.BLUE:
                 self._friends = SoldierState.allied_soldiers
                 self._foes = SoldierState.enemy_soldiers
-                self.handle_click_event = self._handle_ally_click_event
             case C.RED:
                 self._friends = SoldierState.enemy_soldiers
                 self._foes = SoldierState.allied_soldiers
-                self.handle_click_event = self._handle_enemy_click_event
 
         self.level = 1
         self.experience = 0
@@ -43,7 +41,7 @@ class Soldier(GameObject):
         super().__init__(canvas, x, y, attach=attach)
 
     def _create_widgets(self) -> None:
-        self._main_widget = ttk.Button(self._canvas, takefocus=False)
+        self._main_widget = ttk.Label(self._canvas)
         self.refresh_widgets()
         self.health_bar = ttk.Progressbar(
             self._canvas,
@@ -84,20 +82,23 @@ class Soldier(GameObject):
         super().detach_widgets_from_canvas()
 
     def refresh_widgets(self) -> None:
-        if self.attacked_this_turn and self.moved_this_turn:
-            color = C.GRAY
-        else:
-            color = self.color
+        is_exhausted = self.attacked_this_turn and self.moved_this_turn
 
-        color_name = C.COLOR_NAME_BY_HEX_TRIPLET[color]
+        cursor = "arrow" if is_exhausted or self.color == C.RED else "hand2"
+        color_name = C.COLOR_NAME_BY_HEX_TRIPLET[C.GRAY if is_exhausted else self.color]
         soldier_name = type(self).__name__.lower()
 
         self._main_widget.configure(
-            command=((lambda: None) if color == C.GRAY else self.handle_click_event),
-            cursor="hand2",
+            cursor=cursor,
             image=getattr(Image, f"{color_name}_{soldier_name}_{self.level}"),
             style=f"Custom{color_name.capitalize()}.TButton",
         )
+
+        if self.color == C.BLUE:
+            if is_exhausted:
+                self._main_widget.unbind("<ButtonPress-1>")
+            else:
+                self._main_widget.bind("<ButtonPress-1>", self._handle_ally_press_event)
 
     def move_to(self, x: int, y: int) -> None:
         """
@@ -220,34 +221,30 @@ class Soldier(GameObject):
     def _get_damage_output_against(self, other) -> float:
         return self.attack * self.attack_multipliers.get(type(other).__name__, 1.0) * (1.0 - other.defense)
 
-    def _handle_ally_click_event(self) -> None:
-        match GameState.selected_game_objects:
-            case []:
-                self._handle_ally_selection()
-                GameState.selected_game_objects.append(self)
-            case [obj] if obj is self:
-                GameState.selected_game_objects.pop()
-                self._handle_ally_deselection()
-            case _:
-                for obj in GameState.selected_game_objects[::-1]:
-                    obj.handle_click_event()
-                self.handle_click_event()
+    def _handle_ally_press_event(self, event: tk.Event) -> None:
+        self._main_widget.bind("<Motion>", self._handle_ally_drag_event)
+        self._canvas.bind_all("<ButtonRelease-1>", self._handle_ally_release_event)
 
-    def _handle_enemy_click_event(self) -> None:
-        match GameState.selected_game_objects:
-            case [Soldier() as soldier]:
-                if (
-                    not soldier.attacked_this_turn
-                    and soldier.get_distance_between(self) <= soldier.attack_range
-                ):
-                    soldier.assault(self)
-                    soldier.promote()
-                    soldier.handle_click_event()
+        self._pressed_x = event.x
+        self._pressed_y = event.y
 
-    def _handle_ally_selection(self) -> None:
+        self._attack_target_by_id = {}
         if not self.attacked_this_turn:
             AttackRangeHighlight(self._canvas, self.x, self.y, half_diagonal=self.attack_range)
 
+            covered_coordinates = set()
+            for offset in range(self.attack_range + 1):
+                for i in range(-offset, offset + 1):
+                    j = offset - abs(i)
+                    covered_coordinates.add((self.x + i, self.y + j))
+                    if j != 0:
+                        covered_coordinates.add((self.x + i, self.y - j))
+
+            for soldier in self._foes:
+                if (soldier.x, soldier.y) in covered_coordinates:
+                    self._attack_target_by_id[soldier._main_widget_id] = soldier
+
+        self._movement_target_by_id = {}
         if not self.moved_this_turn:
             frontier = set()
             frontier.add((self.x, self.y))
@@ -256,7 +253,9 @@ class Soldier(GameObject):
             while frontier:
                 current = frontier.pop()
 
-                new_cost = cost_table[current] + 1
+                if cost_table[current] == self.mobility:
+                    continue
+
                 for dx, dy in {(1, 0), (0, 1), (-1, 0), (0, -1)}:
                     x, y = current[0] + dx, current[1] + dy
                     if (
@@ -264,16 +263,57 @@ class Soldier(GameObject):
                         and 0 < y < C.VERTICAL_TILE_COUNT - 1
                         and (x, y) not in GameState.occupied_coordinates
                         and (x, y) not in cost_table
-                        and new_cost <= self.mobility
                     ):
                         frontier.add((x, y))
-                        cost_table[(x, y)] = new_cost
-                        MovementHighlight(self._canvas, x, y)
+                        cost_table[(x, y)] = cost_table[current] + 1
 
-            if ControlState.display_outcome_control:
-                ControlState.display_outcome_control._main_widget.lift()
+                        highlight = MovementHighlight(self._canvas, x, y)
+                        self._movement_target_by_id[highlight._main_widget_id] = highlight
 
-    def _handle_ally_deselection(self) -> None:
+        self._main_widget.lift()
+        self.health_bar.lift()
+        if ControlState.display_outcome_control:
+            ControlState.display_outcome_control._main_widget.lift()
+
+        for obj in GameState.selected_game_objects[::-1]:
+            obj.handle_click_event()
+
+    def _handle_ally_drag_event(self, event: tk.Event) -> None:
+        dx = event.x - self._pressed_x
+        dy = event.y - self._pressed_y
+
+        self._main_widget.place(
+            x=self._main_widget.winfo_x() + dx,
+            y=self._main_widget.winfo_y() + dy,
+        )
+        self.health_bar.place(
+            x=self.health_bar.winfo_x() + dx,
+            y=self.health_bar.winfo_y() + dy,
+        )
+
+    def _handle_ally_release_event(self, event: tk.Event) -> None:
+        self._main_widget.unbind("<Motion>")
+        self._canvas.unbind_all("<ButtonRelease-1>")
+
+        x = self._main_widget.winfo_x()
+        y = self._main_widget.winfo_y()
+        overlapping_ids = set(self._canvas.find_overlapping(x, y, x + 40, y + 40))
+
+        if target_ids := overlapping_ids & set(self._attack_target_by_id):
+            assert len(target_ids) == 1
+            target_id = target_ids.pop()
+            soldier = self._attack_target_by_id[target_id]
+            self.assault(soldier)
+            self.promote()
+        elif target_ids := overlapping_ids & set(self._movement_target_by_id):
+            assert len(target_ids) == 1
+            target_id = target_ids.pop()
+            highlight = self._movement_target_by_id[target_id]
+            self.move_to(highlight.x, highlight.y)
+
+        self.detach_widgets_from_canvas()
+        self.attach_widgets_to_canvas()
+
         if HighlightState.attack_range_highlight:
             HighlightState.attack_range_highlight.detach_and_destroy_widgets()
 
