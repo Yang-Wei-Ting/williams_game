@@ -161,8 +161,8 @@ class Soldier(GameObject):
 
         heap = []
         for i, other in enumerate(self._foes | BuildingState.critical_buildings):
-            coordinate = self._get_coordinate_after_moving_toward(other)
-            distance = other.get_distance_between(coordinate)
+            path = self._get_approaching_path(other)
+            distance = other.get_distance_between(path[-1])
             damage = self._get_damage_output_against(other)
 
             if distance > self.attack_range:
@@ -175,21 +175,21 @@ class Soldier(GameObject):
                 action = MOVE_THEN_KILL
                 order_by = [-damage, distance]
 
-            heapq.heappush(heap, (action, *order_by, i, coordinate, other))
+            heapq.heappush(heap, (action, *order_by, i, path, other))
 
-        action, *_, coordinate, other = heapq.heappop(heap)
+        action, *_, path, other = heapq.heappop(heap)
 
-        self.move_to(*coordinate)
+        self.move_to(*path[-1])
         if action in {MOVE_THEN_HIT, MOVE_THEN_KILL}:
             self.assault(other)
             self.promote()
 
-    def _get_coordinate_after_moving_toward(self, other) -> tuple:
+    def _get_approaching_path(self, other) -> tuple:
         """
         Use the A* pathfinding algorithm to compute the shortest path for self
         to move toward other until other is within self's attack range.
-        Deduce the new coordinate that self can reach this turn by following
-        the aforementioned shortest path.
+        Trim the path so that it ends at the furthest coordinate self can reach
+        this turn and return it.
         """
         start = (self.x, self.y)
 
@@ -206,7 +206,8 @@ class Soldier(GameObject):
                 while current:
                     path.append(current)
                     current = parent_table[current]
-                return path[max(-len(path), -self.mobility - 1)]
+                path.reverse()
+                return tuple(path[:self.mobility + 1])
 
             new_cost = cost_table[current] + 1
             for dx, dy in {(1, 0), (0, 1), (-1, 0), (0, -1)}:
@@ -222,7 +223,7 @@ class Soldier(GameObject):
                     parent_table[(x, y)] = current
 
         # TODO: When other is surrounded by obstacles, self should try to approach it.
-        return start
+        return (start,)
 
     def _get_damage_output_against(self, other) -> float:
         return self.attack * self.attack_multipliers.get(type(other).__name__, 1.0) * (1.0 - other.defense)
