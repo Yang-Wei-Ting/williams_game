@@ -85,7 +85,7 @@ class Soldier(GameObject):
         is_exhausted = self.attacked_this_turn and self.moved_this_turn
 
         cursor = "arrow" if is_exhausted or self.color == C.RED else "hand2"
-        color_name = C.COLOR_NAME_BY_HEX_TRIPLET[C.GRAY if is_exhausted else self.color]
+        color_name = C.COLOR_NAME_BY_HEX_TRIPLET[C.GRAY if is_exhausted and self.color == C.BLUE else self.color]
         soldier_name = type(self).__name__.lower()
 
         self._main_widget.configure(
