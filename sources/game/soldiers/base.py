@@ -82,10 +82,22 @@ class Soldier(GameObject):
         super().detach_widgets_from_canvas()
 
     def refresh_widgets(self) -> None:
-        is_exhausted = self.attacked_this_turn and self.moved_this_turn
+        if self.color == C.BLUE:
+            if self.attacked_this_turn and self.moved_this_turn:
+                cursor = "arrow"
+                hex_triplet = C.GRAY
 
-        cursor = "arrow" if is_exhausted or self.color == C.RED else "hand2"
-        color_name = C.COLOR_NAME_BY_HEX_TRIPLET[C.GRAY if is_exhausted and self.color == C.BLUE else self.color]
+                self._main_widget.unbind("<ButtonPress-1>")
+            else:
+                cursor = "hand2"
+                hex_triplet = self.color
+
+                self._main_widget.bind("<ButtonPress-1>", self._handle_ally_press_event)
+        else:
+            cursor = "arrow"
+            hex_triplet = self.color
+
+        color_name = C.COLOR_NAME_BY_HEX_TRIPLET[hex_triplet]
         soldier_name = type(self).__name__.lower()
 
         self._main_widget.configure(
@@ -93,12 +105,6 @@ class Soldier(GameObject):
             image=getattr(Image, f"{color_name}_{soldier_name}_{self.level}"),
             style=f"Custom{color_name.capitalize()}.TButton",
         )
-
-        if self.color == C.BLUE:
-            if is_exhausted:
-                self._main_widget.unbind("<ButtonPress-1>")
-            else:
-                self._main_widget.bind("<ButtonPress-1>", self._handle_ally_press_event)
 
     def move_to(self, x: int, y: int) -> None:
         """
