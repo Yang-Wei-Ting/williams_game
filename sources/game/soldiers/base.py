@@ -300,16 +300,16 @@ class Soldier(GameObject):
         overlapping_ids = set(self._canvas.find_overlapping(x, y, x + 40, y + 40))
 
         if target_ids := overlapping_ids & set(self._attack_target_by_id):
-            assert len(target_ids) == 1
-            target_id = target_ids.pop()
-            soldier = self._attack_target_by_id[target_id]
-            self.assault(soldier)
-            self.promote()
+            if len(target_ids) == 1:
+                target_id = target_ids.pop()
+                soldier = self._attack_target_by_id[target_id]
+                self.assault(soldier)
+                self.promote()
         elif target_ids := overlapping_ids & set(self._movement_target_by_id):
-            assert len(target_ids) == 1
-            target_id = target_ids.pop()
-            highlight = self._movement_target_by_id[target_id]
-            self.move_to(highlight.x, highlight.y)
+            if len(target_ids) == 1:
+                target_id = target_ids.pop()
+                highlight = self._movement_target_by_id[target_id]
+                self.move_to(highlight.x, highlight.y)
 
         self.detach_widgets_from_canvas()
         self.attach_widgets_to_canvas()
