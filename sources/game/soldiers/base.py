@@ -6,7 +6,7 @@ from tkinter import ttk
 from game.base import GameObject
 from game.highlights import AttackRangeHighlight, MovementHighlight
 from game.miscellaneous import Configuration as C
-from game.miscellaneous import Image, get_pixels
+from game.miscellaneous import Image, get_pixels, msleep
 from game.states import BuildingState, ControlState, GameState, HighlightState, SoldierState
 
 
@@ -179,10 +179,21 @@ class Soldier(GameObject):
 
         action, *_, path, other = heapq.heappop(heap)
 
+        highlights = [
+            MovementHighlight(self._canvas, *coordinate) for coordinate in path[:-1]
+        ]
+
         self.move_to(*path[-1])
         if action in {MOVE_THEN_HIT, MOVE_THEN_KILL}:
             self.assault(other)
             self.promote()
+
+        msleep(self._canvas.master, 200)
+
+        for highlight in highlights:
+            highlight.detach_and_destroy_widgets()
+
+        msleep(self._canvas.master, 200)
 
     def _get_approaching_path(self, other) -> tuple:
         """
