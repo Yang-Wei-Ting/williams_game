@@ -31,6 +31,14 @@ class Configuration:
     VERTICAL_TILE_COUNT = 13
 
 
+class Environment:
+
+    SCREEN_HEIGHT = None
+    SCREEN_WIDTH = None
+    TCL_TK_VERSION = None
+    WINDOWING_SYSTEM = None
+
+
 class Image:
 
     @classmethod
