@@ -10,6 +10,7 @@ from game.buildings import Barrack
 from game.controls import EndTurnControl, RestartGameControl
 from game.displays import CoinDisplay, DayDisplay
 from game.miscellaneous import Configuration as C
+from game.miscellaneous import Environment as E
 from game.miscellaneous import Image, Style, get_pixels
 from game.soldiers import Hero
 
@@ -18,6 +19,7 @@ class Program:
 
     def __init__(self) -> None:
         self._window = tk.Tk()
+        self._detect_environment()
         self._window.title("Map")
         self._window.resizable(width=False, height=False)
 
@@ -41,6 +43,12 @@ class Program:
         self._create_initial_allied_soldiers()
 
         self._window.mainloop()
+
+    def _detect_environment(self) -> None:
+        E.SCREEN_HEIGHT = self._window.winfo_screenheight()
+        E.SCREEN_WIDTH = self._window.winfo_screenwidth()
+        E.TCL_TK_VERSION = self._window.call("info", "patchlevel")
+        E.WINDOWING_SYSTEM = self._window.call("tk", "windowingsystem")
 
     def _create_landscape(self) -> None:
         LANDS = [getattr(Image, f"land_{i}") for i in range(1, 11)]

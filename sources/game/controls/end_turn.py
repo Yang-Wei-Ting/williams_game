@@ -1,5 +1,6 @@
 import tkinter as tk
 from collections.abc import Iterator
+from functools import wraps
 from math import ceil
 from random import choice, sample
 from tkinter import ttk
@@ -7,9 +8,34 @@ from tkinter import ttk
 from game.base import GameObject
 from game.controls.display_outcome import DisplayOutcomeControl
 from game.miscellaneous import Configuration as C
+from game.miscellaneous import Environment as E
 from game.soldiers import Archer, Cavalry, Infantry
 from game.soldiers.base import Soldier
 from game.states import BuildingState, ControlState, DisplayState, GameState, SoldierState
+
+
+def block_user_input_during(func):
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        overlay = tk.Toplevel(self._canvas.master)
+        overlay.wm_geometry(f"{E.SCREEN_WIDTH}x{E.SCREEN_HEIGHT}+0+0")
+
+        if E.WINDOWING_SYSTEM == "x11":
+            overlay.wm_overrideredirect(True)
+            overlay.wait_visibility()
+
+        overlay.wm_attributes("-alpha", 0.01, "-topmost", 1)
+
+        if E.WINDOWING_SYSTEM == "win32":
+            overlay.wm_attributes("-disabled", 1)
+            overlay.wm_overrideredirect(True)
+
+        value = func(self, *args, **kwargs)
+
+        overlay.destroy()
+
+        return value
+    return wrapper
 
 
 class EndTurnControl(GameObject):
@@ -35,6 +61,7 @@ class EndTurnControl(GameObject):
     def _unregister(self) -> None:
         ControlState.end_turn_control = None
 
+    @block_user_input_during
     def handle_click_event(self) -> None:
         for obj in GameState.selected_game_objects[::-1]:
             obj.handle_click_event()
