@@ -39,20 +39,20 @@ class EndTurnControl(GameObject):
         for obj in GameState.selected_game_objects[::-1]:
             obj.handle_click_event()
 
-        for ally in SoldierState.allied_soldiers:
-            ally.attacked_this_turn = False
-            ally.moved_this_turn = False
-            ally.refresh_widgets()
-
         if SoldierState.enemy_soldiers:
-            self._execute_computer_turn()
-
             for enemy in SoldierState.enemy_soldiers:
                 enemy.attacked_this_turn = False
                 enemy.moved_this_turn = False
                 enemy.refresh_widgets()
+
+            self._execute_computer_turn()
         else:
             next(self._day_generator_iterator)
+
+        for ally in SoldierState.allied_soldiers:
+            ally.attacked_this_turn = False
+            ally.moved_this_turn = False
+            ally.refresh_widgets()
 
     def _execute_computer_turn(self) -> None:
         if not SoldierState.allied_soldiers and not BuildingState.critical_buildings:

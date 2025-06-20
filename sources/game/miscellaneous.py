@@ -113,3 +113,12 @@ def get_pixels(x: int, y: int, *, x_pixel_shift: float = 0.0, y_pixel_shift: flo
         Configuration.TILE_DIMENSION * (x + 0.5) + x_pixel_shift,
         Configuration.TILE_DIMENSION * (y + 0.5) + y_pixel_shift,
     )
+
+
+def msleep(widget: tk.Misc, time: int) -> None:
+    """
+    Sleep for time milliseconds.
+    """
+    flag = tk.BooleanVar()
+    widget.after(time, flag.set, True)
+    widget.wait_variable(flag)

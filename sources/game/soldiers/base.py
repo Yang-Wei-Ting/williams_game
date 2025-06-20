@@ -6,7 +6,7 @@ from tkinter import ttk
 from game.base import GameObject
 from game.highlights import AttackRangeHighlight, MovementHighlight
 from game.miscellaneous import Configuration as C
-from game.miscellaneous import Image, get_pixels
+from game.miscellaneous import Image, get_pixels, msleep
 from game.states import BuildingState, ControlState, GameState, HighlightState, SoldierState
 
 
@@ -82,10 +82,22 @@ class Soldier(GameObject):
         super().detach_widgets_from_canvas()
 
     def refresh_widgets(self) -> None:
-        is_exhausted = self.attacked_this_turn and self.moved_this_turn
+        if self.color == C.BLUE:
+            if self.attacked_this_turn and self.moved_this_turn:
+                cursor = "arrow"
+                hex_triplet = C.GRAY
 
-        cursor = "arrow" if is_exhausted or self.color == C.RED else "hand2"
-        color_name = C.COLOR_NAME_BY_HEX_TRIPLET[C.GRAY if is_exhausted else self.color]
+                self._main_widget.unbind("<ButtonPress-1>")
+            else:
+                cursor = "hand2"
+                hex_triplet = self.color
+
+                self._main_widget.bind("<ButtonPress-1>", self._handle_ally_press_event)
+        else:
+            cursor = "arrow"
+            hex_triplet = self.color
+
+        color_name = C.COLOR_NAME_BY_HEX_TRIPLET[hex_triplet]
         soldier_name = type(self).__name__.lower()
 
         self._main_widget.configure(
@@ -93,12 +105,6 @@ class Soldier(GameObject):
             image=getattr(Image, f"{color_name}_{soldier_name}_{self.level}"),
             style=f"Custom{color_name.capitalize()}.TButton",
         )
-
-        if self.color == C.BLUE:
-            if is_exhausted:
-                self._main_widget.unbind("<ButtonPress-1>")
-            else:
-                self._main_widget.bind("<ButtonPress-1>", self._handle_ally_press_event)
 
     def move_to(self, x: int, y: int) -> None:
         """
@@ -155,8 +161,8 @@ class Soldier(GameObject):
 
         heap = []
         for i, other in enumerate(self._foes | BuildingState.critical_buildings):
-            coordinate = self._get_coordinate_after_moving_toward(other)
-            distance = other.get_distance_between(coordinate)
+            path = self._get_approaching_path(other)
+            distance = other.get_distance_between(path[-1])
             damage = self._get_damage_output_against(other)
 
             if distance > self.attack_range:
@@ -169,21 +175,32 @@ class Soldier(GameObject):
                 action = MOVE_THEN_KILL
                 order_by = [-damage, distance]
 
-            heapq.heappush(heap, (action, *order_by, i, coordinate, other))
+            heapq.heappush(heap, (action, *order_by, i, path, other))
 
-        action, *_, coordinate, other = heapq.heappop(heap)
+        action, *_, path, other = heapq.heappop(heap)
 
-        self.move_to(*coordinate)
+        highlights = [
+            MovementHighlight(self._canvas, *coordinate) for coordinate in path[:-1]
+        ]
+
+        self.move_to(*path[-1])
         if action in {MOVE_THEN_HIT, MOVE_THEN_KILL}:
             self.assault(other)
             self.promote()
 
-    def _get_coordinate_after_moving_toward(self, other) -> tuple:
+        msleep(self._canvas.master, 200)
+
+        for highlight in highlights:
+            highlight.detach_and_destroy_widgets()
+
+        msleep(self._canvas.master, 200)
+
+    def _get_approaching_path(self, other) -> tuple:
         """
         Use the A* pathfinding algorithm to compute the shortest path for self
         to move toward other until other is within self's attack range.
-        Deduce the new coordinate that self can reach this turn by following
-        the aforementioned shortest path.
+        Trim the path so that it ends at the furthest coordinate self can reach
+        this turn and return it.
         """
         start = (self.x, self.y)
 
@@ -200,7 +217,8 @@ class Soldier(GameObject):
                 while current:
                     path.append(current)
                     current = parent_table[current]
-                return path[max(-len(path), -self.mobility - 1)]
+                path.reverse()
+                return tuple(path[:self.mobility + 1])
 
             new_cost = cost_table[current] + 1
             for dx, dy in {(1, 0), (0, 1), (-1, 0), (0, -1)}:
@@ -216,7 +234,7 @@ class Soldier(GameObject):
                     parent_table[(x, y)] = current
 
         # TODO: When other is surrounded by obstacles, self should try to approach it.
-        return start
+        return (start,)
 
     def _get_damage_output_against(self, other) -> float:
         return self.attack * self.attack_multipliers.get(type(other).__name__, 1.0) * (1.0 - other.defense)
