@@ -240,8 +240,9 @@ class Soldier(GameObject):
         return self.attack * self.attack_multipliers.get(type(other).__name__, 1.0) * (1.0 - other.defense)
 
     def _handle_ally_press_event(self, event: tk.Event) -> None:
+        self._main_widget.grab_set()
         self._main_widget.bind("<Motion>", self._handle_ally_drag_event)
-        self._canvas.bind_all("<ButtonRelease-1>", self._handle_ally_release_event)
+        self._main_widget.bind("<ButtonRelease-1>", self._handle_ally_release_event)
 
         self._pressed_x = event.x
         self._pressed_y = event.y
@@ -310,8 +311,9 @@ class Soldier(GameObject):
         )
 
     def _handle_ally_release_event(self, event: tk.Event) -> None:
+        self._main_widget.grab_release()
         self._main_widget.unbind("<Motion>")
-        self._canvas.unbind_all("<ButtonRelease-1>")
+        self._main_widget.unbind("<ButtonRelease-1>")
 
         x = self._main_widget.winfo_x()
         y = self._main_widget.winfo_y()
