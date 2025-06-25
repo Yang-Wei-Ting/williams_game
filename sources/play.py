@@ -3,6 +3,7 @@
 """
 
 
+import sys
 import tkinter as tk
 from random import choices
 
@@ -20,6 +21,7 @@ class Program:
     def __init__(self) -> None:
         self._window = tk.Tk()
         self._detect_environment()
+        self._check_requirements()
         self._window.title("Map")
         self._window.resizable(width=False, height=False)
 
@@ -49,6 +51,10 @@ class Program:
         E.SCREEN_WIDTH = self._window.winfo_screenwidth()
         E.TCL_TK_VERSION = self._window.call("info", "patchlevel")
         E.WINDOWING_SYSTEM = self._window.call("tk", "windowingsystem")
+
+    def _check_requirements(self) -> None:
+        if E.WINDOWING_SYSTEM == "aqua":
+            sys.exit("Aqua windowing system is currently not supported.")
 
     def _create_landscape(self) -> None:
         LANDS = [getattr(Image, f"land_{i}") for i in range(1, 11)]

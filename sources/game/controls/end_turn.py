@@ -9,6 +9,7 @@ from game.base import GameObject
 from game.controls.display_outcome import DisplayOutcomeControl
 from game.miscellaneous import Configuration as C
 from game.miscellaneous import Environment as E
+from game.miscellaneous import msleep
 from game.soldiers import Archer, Cavalry, Infantry
 from game.soldiers.base import Soldier
 from game.states import BuildingState, ControlState, DisplayState, GameState, SoldierState
@@ -20,15 +21,17 @@ def block_user_input_during(func):
         overlay = tk.Toplevel(self._canvas.master)
         overlay.wm_geometry(f"{E.SCREEN_WIDTH}x{E.SCREEN_HEIGHT}+0+0")
 
-        if E.WINDOWING_SYSTEM == "x11":
-            overlay.wm_overrideredirect(True)
-            overlay.wait_visibility()
+        match E.WINDOWING_SYSTEM:
+            case "win32":
+                overlay.wm_attributes("-alpha", 0.01, "-disabled", 1, "-topmost", 1)
+                overlay.wm_overrideredirect(True)
+            case "x11":
+                overlay.wm_overrideredirect(True)
+                overlay.wait_visibility()
+                overlay.wm_attributes("-alpha", 0.01, "-topmost", 1)
 
-        overlay.wm_attributes("-alpha", 0.01, "-topmost", 1)
-
-        if E.WINDOWING_SYSTEM == "win32":
-            overlay.wm_attributes("-disabled", 1)
-            overlay.wm_overrideredirect(True)
+                # Wait until the overlay becomes transparent.
+                msleep(self._canvas.master, 20)
 
         value = func(self, *args, **kwargs)
 
