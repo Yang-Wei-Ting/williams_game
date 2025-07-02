@@ -3,7 +3,7 @@ from game.soldiers.base import Soldier
 
 class Infantry(Soldier):
     """
-    Soldier with high defense.
+    Soldier with high attack range and defense.
     Counter cavalries, countered by archers.
     """
 
@@ -12,5 +12,6 @@ class Infantry(Soldier):
         "Cavalry": 1.5,
         "Hero": 0.7,
     }
+    attack_range = 2
 
     defense = 0.25
