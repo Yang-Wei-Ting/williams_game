@@ -6,6 +6,7 @@ from tkinter import ttk
 from game.base import GameObject
 from game.highlights import AttackRangeHighlight, MovementHighlight
 from game.miscellaneous import Configuration as C
+from game.miscellaneous import Environment as E
 from game.miscellaneous import Image, get_pixels, msleep
 from game.states import BuildingState, ControlState, GameState, HighlightState, SoldierState
 
@@ -246,6 +247,14 @@ class Soldier(GameObject):
 
         self._pressed_x = event.x
         self._pressed_y = event.y
+
+        # On X11, clean up highlights in case the mouse button was released outside the window.
+        if E.WINDOWING_SYSTEM == "x11":
+            if HighlightState.attack_range_highlight:
+                HighlightState.attack_range_highlight.detach_and_destroy_widgets()
+
+            for highlight in list(HighlightState.movement_highlights):
+                highlight.detach_and_destroy_widgets()
 
         self._attack_target_by_id = {}
         if not self.attacked_this_turn:
