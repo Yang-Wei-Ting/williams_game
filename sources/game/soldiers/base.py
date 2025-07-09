@@ -95,8 +95,10 @@ class Soldier(GameObject):
 
                 self._main_widget.bind("<ButtonPress-1>", self._handle_ally_press_event)
         else:
-            cursor = "arrow"
+            cursor = "hand2"
             hex_triplet = self.color
+
+            self._main_widget.bind("<ButtonPress-1>", self._handle_enemy_press_event)
 
         color_name = C.COLOR_NAME_BY_HEX_TRIPLET[hex_triplet]
         soldier_name = type(self).__name__.lower()
@@ -342,6 +344,53 @@ class Soldier(GameObject):
 
         self.detach_widgets_from_canvas()
         self.attach_widgets_to_canvas()
+
+        if HighlightState.attack_range_highlight:
+            HighlightState.attack_range_highlight.detach_and_destroy_widgets()
+
+        for highlight in list(HighlightState.movement_highlights):
+            highlight.detach_and_destroy_widgets()
+
+    def _handle_enemy_press_event(self, event: tk.Event) -> None:
+        self._main_widget.grab_set()
+        self._main_widget.bind("<ButtonRelease-1>", self._handle_enemy_release_event)
+
+        AttackRangeHighlight(self._canvas, self.x, self.y, half_diagonal=self.attack_range)
+
+        frontier = set()
+        frontier.add((self.x, self.y))
+        cost_table = {(self.x, self.y): 0}
+
+        while frontier:
+            current = frontier.pop()
+
+            if cost_table[current] == self.mobility:
+                continue
+
+            for dx, dy in {(1, 0), (0, 1), (-1, 0), (0, -1)}:
+                x, y = current[0] + dx, current[1] + dy
+                if (
+                    0 <= x < C.HORIZONTAL_LAND_TILE_COUNT
+                    and 0 <= y < C.VERTICAL_TILE_COUNT
+                    and (x, y) not in GameState.occupied_coordinates
+                    and (x, y) not in cost_table
+                ):
+                    frontier.add((x, y))
+                    cost_table[(x, y)] = cost_table[current] + 1
+
+                    MovementHighlight(self._canvas, x, y)
+
+        self._main_widget.lift()
+        self.health_bar.lift()
+        if ControlState.display_outcome_control:
+            ControlState.display_outcome_control._main_widget.lift()
+
+        for obj in GameState.selected_game_objects[::-1]:
+            obj.handle_click_event()
+
+    def _handle_enemy_release_event(self, event: tk.Event) -> None:
+        self._main_widget.grab_release()
+        self._main_widget.unbind("<ButtonRelease-1>")
 
         if HighlightState.attack_range_highlight:
             HighlightState.attack_range_highlight.detach_and_destroy_widgets()
