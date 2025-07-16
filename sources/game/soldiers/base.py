@@ -176,7 +176,7 @@ class Soldier(GameObject):
                 order_by = [-damage, other.health, distance]
             else:
                 action = MOVE_THEN_KILL
-                order_by = [-damage, distance]
+                order_by = [-other.health, distance]
 
             heapq.heappush(heap, (action, *order_by, i, path, other))
 
