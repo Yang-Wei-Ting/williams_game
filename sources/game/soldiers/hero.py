@@ -4,9 +4,6 @@ from game.soldiers.base import Soldier
 
 
 class Hero(Soldier):
-    """
-    Counter all soldiers.
-    """
 
     attack = 40
     attack_multipliers = {
