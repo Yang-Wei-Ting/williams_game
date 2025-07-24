@@ -1,6 +1,6 @@
-# William's Game
+# TkTactics
 
-**William's Game** is a single-player, turn-based strategy board game. You command the blue army, battling against ever-growing waves of red enemy forces controlled by the computer. With each wave, the enemy grows stronger and more aggressive - can you hold the line and lead your troops to victory?
+**TkTactics** is a single-player, turn-based strategy board game. You command the blue army, battling against ever-growing waves of red enemy forces controlled by the computer. With each wave, the enemy grows stronger and more aggressive - can you hold the line and lead your troops to victory?
 
 ## Requirements
 
@@ -9,8 +9,8 @@
 
 ## How to Play
 
-    git clone https://github.com/Yang-Wei-Ting/williams_game.git
-    cd williams_game/
+    git clone https://github.com/Yang-Wei-Ting/TkTactics.git
+    cd TkTactics/
     python sources/play.py
 
 ## Game Overview
