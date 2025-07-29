@@ -18,7 +18,7 @@ class Soldier(GameObject):
     attack_range = 1
 
     defense = 0.15
-    health = 100
+    health = 100.0
 
     mobility = 2
 
@@ -128,7 +128,7 @@ class Soldier(GameObject):
         Make self attack other.
         """
         other.health -= self._get_damage_output_against(other)
-        if other.health > 0:
+        if other.health > 0.0:
             other.health_bar["value"] = other.health
         else:
             other.detach_and_destroy_widgets()
@@ -147,7 +147,7 @@ class Soldier(GameObject):
 
         self.refresh_widgets()
 
-    def restore_health_by(self, amount: int) -> None:
+    def restore_health_by(self, amount: float) -> None:
         """
         Restore self's health by amount (cannot exceed the maximum value).
         """

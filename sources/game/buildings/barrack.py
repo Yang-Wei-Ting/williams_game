@@ -7,7 +7,7 @@ from game.states import BuildingState, RecruitmentState
 class Barrack(Building):
 
     defense = 0.4
-    health = 400
+    health = 400.0
 
     def _register(self) -> None:
         super()._register()

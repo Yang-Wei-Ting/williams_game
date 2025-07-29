@@ -13,7 +13,7 @@ class Hero(Soldier):
         "Infantry": 1.5,
     }
 
-    health = 200
+    health = 200.0
 
     mobility = 3
 
