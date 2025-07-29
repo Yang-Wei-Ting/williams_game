@@ -22,7 +22,7 @@ class Program:
         self._window = tk.Tk()
         self._detect_environment()
         self._check_requirements()
-        self._window.title("Map")
+        self._window.title("TkTactics")
         self._window.resizable(width=False, height=False)
 
         self._canvas = tk.Canvas(
