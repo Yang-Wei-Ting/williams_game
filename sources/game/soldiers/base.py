@@ -1,5 +1,4 @@
 import heapq
-import math
 import tkinter as tk
 from tkinter import ttk
 
@@ -13,12 +12,12 @@ from game.states import BuildingState, ControlState, GameState, HighlightState, 
 
 class Soldier(GameObject):
 
-    attack = 30
+    attack = 30.0
     attack_multipliers = {}
     attack_range = 1
 
     defense = 0.15
-    health = 100
+    health = 100.0
 
     mobility = 2
 
@@ -128,7 +127,7 @@ class Soldier(GameObject):
         Make self attack other.
         """
         other.health -= self._get_damage_output_against(other)
-        if other.health > 0:
+        if other.health > 0.0:
             other.health_bar["value"] = other.health
         else:
             other.detach_and_destroy_widgets()
@@ -138,7 +137,7 @@ class Soldier(GameObject):
         self.refresh_widgets()
 
     def promote(self) -> None:
-        LEVEL_UP_EXPERIENCE_BY_LEVEL = {1: 4, 2: 8, 3: 16, 4: 32, 5: math.inf}
+        LEVEL_UP_EXPERIENCE_BY_LEVEL = {1: 4, 2: 8, 3: 16, 4: 32, 5: 65535}
         while self.experience >= LEVEL_UP_EXPERIENCE_BY_LEVEL[self.level]:
             self.experience -= LEVEL_UP_EXPERIENCE_BY_LEVEL[self.level]
             self.level += 1
@@ -147,7 +146,7 @@ class Soldier(GameObject):
 
         self.refresh_widgets()
 
-    def restore_health_by(self, amount: int) -> None:
+    def restore_health_by(self, amount: float) -> None:
         """
         Restore self's health by amount (cannot exceed the maximum value).
         """
