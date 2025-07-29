@@ -89,12 +89,12 @@ class Style:
         )
         style.configure(
             "BigText.Black_Burlywood4.TButton",
-            font=("Times New Roman", 36, "bold italic"),
+            font=("Courier", 36, "bold italic"),
             padding=9,
         )
         style.configure(
             "SmallText.Black_Burlywood4.TButton",
-            font=("Times New Roman", 18, "bold"),
+            font=("Courier", 18, "bold"),
             padding=3,
             width=9,
         )
