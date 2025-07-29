@@ -17,7 +17,7 @@ class SoldierRecruitment(GameObject):
         raise NotImplementedError
 
     def _create_widgets(self) -> None:
-        self._main_widget = ttk.Button(self._canvas, takefocus=False)
+        self._main_widget: ttk.Button = ttk.Button(self._canvas, takefocus=False)
         self.refresh_widgets()
 
     def _register(self) -> None:
