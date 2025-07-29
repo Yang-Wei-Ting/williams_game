@@ -1,5 +1,4 @@
 import heapq
-import math
 import tkinter as tk
 from tkinter import ttk
 
@@ -138,7 +137,7 @@ class Soldier(GameObject):
         self.refresh_widgets()
 
     def promote(self) -> None:
-        LEVEL_UP_EXPERIENCE_BY_LEVEL = {1: 4, 2: 8, 3: 16, 4: 32, 5: math.inf}
+        LEVEL_UP_EXPERIENCE_BY_LEVEL = {1: 4, 2: 8, 3: 16, 4: 32, 5: 65535}
         while self.experience >= LEVEL_UP_EXPERIENCE_BY_LEVEL[self.level]:
             self.experience -= LEVEL_UP_EXPERIENCE_BY_LEVEL[self.level]
             self.level += 1
