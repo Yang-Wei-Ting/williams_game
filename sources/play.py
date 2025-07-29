@@ -8,7 +8,7 @@ import tkinter as tk
 from random import choices
 
 from game.buildings import Barrack
-from game.controls import EndTurnControl, RestartGameControl
+from game.controls import EndTurnControl
 from game.displays import CoinDisplay, DayDisplay
 from game.miscellaneous import Configuration as C
 from game.miscellaneous import Environment as E
@@ -80,20 +80,15 @@ class Program:
         DayDisplay(
             self._canvas,
             C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
-            1,
+            0,
         )
         CoinDisplay(
             self._canvas,
             C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
-            2,
+            1,
         )
 
     def _create_controls(self) -> None:
-        RestartGameControl(
-            self._canvas,
-            C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
-            0,
-        )
         EndTurnControl(
             self._canvas,
             C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
