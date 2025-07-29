@@ -7,7 +7,7 @@ from game.highlights import AttackRangeHighlight, MovementHighlight
 from game.miscellaneous import Configuration as C
 from game.miscellaneous import Environment as E
 from game.miscellaneous import Image, get_pixels, msleep
-from game.states import BuildingState, ControlState, GameState, HighlightState, SoldierState
+from game.states import BuildingState, ControlState, DisplayState, GameState, HighlightState, SoldierState
 
 
 class Soldier(GameObject):
@@ -257,6 +257,10 @@ class Soldier(GameObject):
             for highlight in list(HighlightState.movement_highlights):
                 highlight.detach_and_destroy_widgets()
 
+            GameState.pressed_game_object = None
+            if DisplayState.stat_display:
+                DisplayState.stat_display.refresh_widgets()
+
         self._attack_target_by_id = {}
         if not self.attacked_this_turn:
             AttackRangeHighlight(self._canvas, self.x, self.y, half_diagonal=self.attack_range)
@@ -304,6 +308,10 @@ class Soldier(GameObject):
         if ControlState.display_outcome_control:
             ControlState.display_outcome_control._main_widget.lift()
 
+        GameState.pressed_game_object = self
+        if DisplayState.stat_display:
+            DisplayState.stat_display.refresh_widgets()
+
         for obj in GameState.selected_game_objects[::-1]:
             obj.handle_click_event()
 
@@ -350,6 +358,10 @@ class Soldier(GameObject):
         for highlight in list(HighlightState.movement_highlights):
             highlight.detach_and_destroy_widgets()
 
+        GameState.pressed_game_object = None
+        if DisplayState.stat_display:
+            DisplayState.stat_display.refresh_widgets()
+
     def _handle_enemy_press_event(self, event: tk.Event) -> None:
         self._main_widget.grab_set()
         self._main_widget.bind("<ButtonRelease-1>", self._handle_enemy_release_event)
@@ -384,6 +396,10 @@ class Soldier(GameObject):
         if ControlState.display_outcome_control:
             ControlState.display_outcome_control._main_widget.lift()
 
+        GameState.pressed_game_object = self
+        if DisplayState.stat_display:
+            DisplayState.stat_display.refresh_widgets()
+
         for obj in GameState.selected_game_objects[::-1]:
             obj.handle_click_event()
 
@@ -396,3 +412,7 @@ class Soldier(GameObject):
 
         for highlight in list(HighlightState.movement_highlights):
             highlight.detach_and_destroy_widgets()
+
+        GameState.pressed_game_object = None
+        if DisplayState.stat_display:
+            DisplayState.stat_display.refresh_widgets()

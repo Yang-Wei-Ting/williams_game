@@ -18,17 +18,17 @@ class Barrack(Building):
         InfantryRecruitment(
             self._canvas,
             C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
-            2,
+            4,
         )
         ArcherRecruitment(
             self._canvas,
             C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
-            3,
+            5,
         )
         CavalryRecruitment(
             self._canvas,
             C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
-            4,
+            6,
         )
 
     def _handle_deselection(self) -> None:

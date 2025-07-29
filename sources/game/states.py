@@ -4,6 +4,7 @@ class GameState:
     wave = 0
     coin = 10
     occupied_coordinates = set()
+    pressed_game_object = None
     selected_game_objects = []
 
 
@@ -23,6 +24,7 @@ class DisplayState:
 
     coin_display = None
     day_display = None
+    stat_display = None
 
 
 class HighlightState:
