@@ -1,4 +1,3 @@
-import tkinter as tk
 from abc import abstractmethod
 from tkinter import ttk
 
@@ -13,11 +12,6 @@ class Display(GameObject):
             cursor="arrow",
             style="SmallText.Black_Burlywood4.TButton",
         )
-
-        # On Fedora KDE Plasma Desktop 42, ttk.Label does not appear to respect
-        # anchor=tk.CENTER when set via ttk.Style.
-        self._main_widget.configure(anchor=tk.CENTER)
-
         self.refresh_widgets()
 
     @abstractmethod
