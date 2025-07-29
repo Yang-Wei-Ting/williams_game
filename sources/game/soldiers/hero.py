@@ -5,7 +5,7 @@ from game.soldiers.base import Soldier
 
 class Hero(Soldier):
 
-    attack = 40
+    attack = 40.0
     attack_multipliers = {
         "Archer": 1.5,
         "Cavalry": 1.5,

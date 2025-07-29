@@ -13,7 +13,7 @@ from game.states import BuildingState, ControlState, GameState, HighlightState, 
 
 class Soldier(GameObject):
 
-    attack = 30
+    attack = 30.0
     attack_multipliers = {}
     attack_range = 1
 
