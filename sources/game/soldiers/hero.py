@@ -1,5 +1,3 @@
-import math
-
 from game.soldiers.base import Soldier
 
 
@@ -17,4 +15,4 @@ class Hero(Soldier):
 
     mobility = 3
 
-    cost = math.inf
+    cost = 65535
