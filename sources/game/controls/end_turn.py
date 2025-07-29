@@ -146,13 +146,13 @@ class EndTurnControl(GameObject):
             *[(x, V - 1) for x in range(1, 3)],         #    2
         ]
 
-        def sample_n_coordinates_from_m_areas(n: int, m: int) -> list:
+        def sample_n_coordinates_from_m_areas(n: int, m: int) -> list[tuple[int, int]]:
             coordinates = []
             for area in sample([area_north_east, area_north_west, area_south_east, area_south_west], m):
                 coordinates.extend(area)
             return sample(coordinates, n)
 
-        def sample_common_soldiers() -> Soldier:
+        def sample_common_soldiers() -> type[Soldier]:
             return choice([Archer, Cavalry, Infantry])
 
         common_soldiers = {Archer, Cavalry, Infantry}

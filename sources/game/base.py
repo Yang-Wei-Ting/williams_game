@@ -1,5 +1,6 @@
 import tkinter as tk
 from abc import ABC, abstractmethod
+from tkinter import ttk
 
 from game.miscellaneous import get_pixels
 
@@ -23,6 +24,7 @@ class GameObject(ABC):
 
     @abstractmethod
     def _create_widgets(self) -> None:
+        self._main_widget: ttk.Button | ttk.Label
         raise NotImplementedError
 
     def _destroy_widgets(self) -> None:
@@ -47,7 +49,7 @@ class GameObject(ABC):
         self._canvas.delete(self._main_widget_id)
         del self._main_widget_id
 
-    def get_distance_between(self, other) -> int:
+    def get_distance_between(self, other: "GameObject | tuple[int, int]") -> int:
         """
         Return the Manhattan distance between self and other.
         """

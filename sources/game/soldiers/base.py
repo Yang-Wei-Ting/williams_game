@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from game.base import GameObject
+from game.buildings.base import Building
 from game.highlights import AttackRangeHighlight, MovementHighlight
 from game.miscellaneous import Configuration as C
 from game.miscellaneous import Environment as E
@@ -13,7 +14,7 @@ from game.states import BuildingState, ControlState, DisplayState, GameState, Hi
 class Soldier(GameObject):
 
     attack = 30.0
-    attack_multipliers = {}
+    attack_multipliers: dict[str, float] = {}
     attack_range = 1
 
     defense = 0.15
@@ -122,7 +123,7 @@ class Soldier(GameObject):
         self.moved_this_turn = True
         self.refresh_widgets()
 
-    def assault(self, other) -> None:
+    def assault(self, other: "Building | Soldier") -> None:
         """
         Make self attack other.
         """
@@ -197,7 +198,7 @@ class Soldier(GameObject):
 
         msleep(self._canvas.master, 200)
 
-    def _get_approaching_path(self, other) -> tuple:
+    def _get_approaching_path(self, other: "Building | Soldier") -> tuple[tuple[int, int]]:
         """
         Use the A* pathfinding algorithm to compute the shortest path for self
         to move toward other until other is within self's attack range.
@@ -254,7 +255,7 @@ class Soldier(GameObject):
         # TODO: When other is surrounded by obstacles, self should try to approach it.
         return (start,)
 
-    def _get_damage_output_against(self, other) -> float:
+    def _get_damage_output_against(self, other: "Building | Soldier") -> float:
         return self.attack * self.attack_multipliers.get(type(other).__name__, 1.0) * (1.0 - other.defense)
 
     def _handle_ally_press_event(self, event: tk.Event) -> None:
