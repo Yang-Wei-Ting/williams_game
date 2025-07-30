@@ -11,4 +11,4 @@ class CoinDisplay(Display):
         DisplayState.coin_display = None
 
     def refresh_widgets(self) -> None:
-        self._main_widget.configure(text=f"Coin: {GameState.coin}")
+        self._main_widget.configure(text=f"Coin: {GameState.coin:>3}")

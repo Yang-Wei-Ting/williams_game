@@ -11,4 +11,4 @@ class DayDisplay(Display):
         DisplayState.day_display = None
 
     def refresh_widgets(self) -> None:
-        self._main_widget.configure(text=f"Day: {GameState.day}")
+        self._main_widget.configure(text=f"Day:  {GameState.day:>3}")
