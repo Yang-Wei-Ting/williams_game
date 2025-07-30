@@ -17,7 +17,6 @@ class ControlState:
 
     display_outcome_control = None
     end_turn_control = None
-    restart_game_control = None
 
 
 class DisplayState:
