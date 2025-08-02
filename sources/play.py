@@ -14,6 +14,7 @@ from game.miscellaneous import Configuration as C
 from game.miscellaneous import Environment as E
 from game.miscellaneous import Image, Style, get_pixels
 from game.soldiers import Hero
+from game.states import GameState
 
 
 class Program:
@@ -64,13 +65,15 @@ class Program:
         ])
         WEIGHTS = (56, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 15, 15)
 
-        # TODO: Track canvas image object ID.
         for y in range(C.VERTICAL_TILE_COUNT):
             for x in range(C.HORIZONTAL_LAND_TILE_COUNT):
-                self._canvas.create_image(
-                    *get_pixels(x, y),
-                    image=choices(LANDS, weights=WEIGHTS)[0],
-                )
+                image = choices(LANDS, weights=WEIGHTS)[0]
+                self._canvas.create_image(*get_pixels(x, y), image=image)
+
+                if image in {Image.rock, Image.tree}:
+                    GameState.cost_by_coordinate[(x, y)] = -1
+                else:
+                    GameState.cost_by_coordinate[(x, y)] = 1
 
             for _ in range(C.HORIZONTAL_SHORE_TILE_COUNT):
                 x += 1

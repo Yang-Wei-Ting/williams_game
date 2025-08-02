@@ -205,7 +205,6 @@ class Soldier(GameObject):
         this turn and return it.
         """
         start = (self.x, self.y)
-
         frontier = []
         heapq.heappush(frontier, (0, start))
         cost_table = {start: 0}
@@ -220,20 +219,37 @@ class Soldier(GameObject):
                     path.append(current)
                     current = parent_table[current]
                 path.reverse()
-                return tuple(path[:self.mobility + 1])
 
-            new_cost = cost_table[current] + 1
+                path_this_turn = [path[0]]
+                cost = 0
+                for coordinate in path[1:]:
+                    c = GameState.cost_by_coordinate[coordinate]
+                    if c == -1:
+                        c = self.mobility
+                    cost += c
+                    if cost > self.mobility:
+                        break
+                    path_this_turn.append(coordinate)
+
+                return tuple(path_this_turn)
+
             for dx, dy in {(1, 0), (0, 1), (-1, 0), (0, -1)}:
                 x, y = current[0] + dx, current[1] + dy
+
                 if (
                     0 <= x < C.HORIZONTAL_LAND_TILE_COUNT
                     and 0 <= y < C.VERTICAL_TILE_COUNT
                     and (x, y) not in GameState.occupied_coordinates
-                    and ((x, y) not in cost_table or new_cost < cost_table[(x, y)])
                 ):
-                    heapq.heappush(frontier, (new_cost + other.get_distance_between((x, y)), (x, y)))
-                    cost_table[(x, y)] = new_cost
-                    parent_table[(x, y)] = current
+                    c = GameState.cost_by_coordinate[(x, y)]
+                    if c == -1:
+                        c = self.mobility
+                    new_cost = cost_table[current] + c
+
+                    if (x, y) not in cost_table or new_cost < cost_table[(x, y)]:
+                        heapq.heappush(frontier, (new_cost + other.get_distance_between((x, y)), (x, y)))
+                        cost_table[(x, y)] = new_cost
+                        parent_table[(x, y)] = current
 
         # TODO: When other is surrounded by obstacles, self should try to approach it.
         return (start,)
@@ -279,29 +295,38 @@ class Soldier(GameObject):
 
         self._movement_target_by_id = {}
         if not self.moved_this_turn:
-            frontier = set()
-            frontier.add((self.x, self.y))
-            cost_table = {(self.x, self.y): 0}
+            # Dijkstra
+            start = (self.x, self.y)
+            frontier = []
+            heapq.heappush(frontier, (0, start))
+            cost_table = {start: 0}
 
             while frontier:
-                current = frontier.pop()
+                current = heapq.heappop(frontier)[1]
 
-                if cost_table[current] == self.mobility:
+                if cost_table[current] >= self.mobility:
                     continue
 
                 for dx, dy in {(1, 0), (0, 1), (-1, 0), (0, -1)}:
                     x, y = current[0] + dx, current[1] + dy
+
                     if (
                         0 < x < C.HORIZONTAL_LAND_TILE_COUNT - 1
                         and 0 < y < C.VERTICAL_TILE_COUNT - 1
                         and (x, y) not in GameState.occupied_coordinates
-                        and (x, y) not in cost_table
                     ):
-                        frontier.add((x, y))
-                        cost_table[(x, y)] = cost_table[current] + 1
+                        c = GameState.cost_by_coordinate[(x, y)]
+                        if c == -1:
+                            c = self.mobility
+                        new_cost = cost_table[current] + c
 
-                        highlight = MovementHighlight(self._canvas, x, y)
-                        self._movement_target_by_id[highlight._main_widget_id] = highlight
+                        if (x, y) not in cost_table or new_cost < cost_table[(x, y)]:
+                            heapq.heappush(frontier, (new_cost, (x, y)))
+                            cost_table[(x, y)] = new_cost
+
+                            if new_cost <= self.mobility:
+                                highlight = MovementHighlight(self._canvas, x, y)
+                                self._movement_target_by_id[highlight._main_widget_id] = highlight
 
         self._main_widget.lift()
         self.health_bar.lift()
@@ -368,28 +393,37 @@ class Soldier(GameObject):
 
         AttackRangeHighlight(self._canvas, self.x, self.y, half_diagonal=self.attack_range)
 
-        frontier = set()
-        frontier.add((self.x, self.y))
-        cost_table = {(self.x, self.y): 0}
+        # Dijkstra
+        start = (self.x, self.y)
+        frontier = []
+        heapq.heappush(frontier, (0, start))
+        cost_table = {start: 0}
 
         while frontier:
-            current = frontier.pop()
+            current = heapq.heappop(frontier)[1]
 
-            if cost_table[current] == self.mobility:
+            if cost_table[current] >= self.mobility:
                 continue
 
             for dx, dy in {(1, 0), (0, 1), (-1, 0), (0, -1)}:
                 x, y = current[0] + dx, current[1] + dy
+
                 if (
                     0 <= x < C.HORIZONTAL_LAND_TILE_COUNT
                     and 0 <= y < C.VERTICAL_TILE_COUNT
                     and (x, y) not in GameState.occupied_coordinates
-                    and (x, y) not in cost_table
                 ):
-                    frontier.add((x, y))
-                    cost_table[(x, y)] = cost_table[current] + 1
+                    c = GameState.cost_by_coordinate[(x, y)]
+                    if c == -1:
+                        c = self.mobility
+                    new_cost = cost_table[current] + c
 
-                    MovementHighlight(self._canvas, x, y)
+                    if (x, y) not in cost_table or new_cost < cost_table[(x, y)]:
+                        heapq.heappush(frontier, (new_cost, (x, y)))
+                        cost_table[(x, y)] = new_cost
+
+                        if new_cost <= self.mobility:
+                            MovementHighlight(self._canvas, x, y)
 
         self._main_widget.lift()
         self.health_bar.lift()
