@@ -9,7 +9,7 @@ from random import choices
 
 from game.buildings import Barrack
 from game.controls import EndTurnControl
-from game.displays import CoinDisplay, DayDisplay
+from game.displays import CoinDisplay, DayDisplay, StatDisplay
 from game.miscellaneous import Configuration as C
 from game.miscellaneous import Environment as E
 from game.miscellaneous import Image, Style, get_pixels
@@ -86,6 +86,11 @@ class Program:
             self._canvas,
             C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
             1,
+        )
+        StatDisplay(
+            self._canvas,
+            C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
+            5,
         )
 
     def _create_controls(self) -> None:
