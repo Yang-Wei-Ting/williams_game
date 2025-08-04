@@ -10,6 +10,9 @@ from game.states import GameState
 
 class Building(GameObject):
 
+    defense = 0.4
+    health = 400.0
+
     def _create_widgets(self) -> None:
         self._main_widget = ttk.Button(
             self._canvas,

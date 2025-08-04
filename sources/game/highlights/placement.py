@@ -28,7 +28,8 @@ class PlacementHighlight(GameObject):
         recruitment = GameState.selected_game_objects[-1]
 
         GameState.coin -= recruitment.target.cost
-        DisplayState.coin_display.refresh_widgets()
+        if DisplayState.coin_display:
+            DisplayState.coin_display.refresh_widgets()
         for _recruitment in RecruitmentState.barrack_recruitments:
             _recruitment.refresh_widgets()
 
