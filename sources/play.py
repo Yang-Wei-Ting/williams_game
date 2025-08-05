@@ -57,8 +57,12 @@ class Program:
             sys.exit("Aqua windowing system is currently not supported.")
 
     def _create_landscape(self) -> None:
-        LANDS = [getattr(Image, f"land_{i}") for i in range(1, 11)]
-        WEIGHTS = (30, 15, 14, 14, 7, 6, 5, 4, 3, 2)
+        LANDS = tuple([
+            *(getattr(Image, f"grass_{i}") for i in range(1, 16)),
+            Image.rock,
+            Image.tree,
+        ])
+        WEIGHTS = (56, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 15, 15)
 
         # TODO: Track canvas image object ID.
         for y in range(C.VERTICAL_TILE_COUNT):
@@ -70,7 +74,7 @@ class Program:
 
             for _ in range(C.HORIZONTAL_SHORE_TILE_COUNT):
                 x += 1
-                self._canvas.create_image(*get_pixels(x, y), image=Image.shore)
+                self._canvas.create_image(*get_pixels(x, y), image=Image.ocean)
 
             for _ in range(C.HORIZONTAL_OCEAN_TILE_COUNT):
                 x += 1
