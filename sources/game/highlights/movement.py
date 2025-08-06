@@ -1,22 +1,28 @@
 from tkinter import ttk
 
-from game.base import GameObject
+from game.base import GameObject, GameObjectModel, GameObjectView
 from game.miscellaneous import Image
-from game.states import HighlightState
 
 
-class MovementHighlight(GameObject):
+class MovementHighlightModel(GameObjectModel):
+    pass
+
+
+class MovementHighlightView(GameObjectView):
 
     def _create_widgets(self) -> None:
-        self._main_widget = ttk.Label(
-            self._canvas,
+        self._widgets["main"] = ttk.Label(
+            self.canvas,
             cursor="arrow",
             style="Flat.Royalblue1.TButton",
             image=Image.transparent_12x12,
         )
 
+
+class MovementHighlight(GameObject):
+
     def _register(self) -> None:
-        HighlightState.movement_highlights.add(self)
+        GameObject.unordered_collections["movement_highlight"].add(self)
 
     def _unregister(self) -> None:
-        HighlightState.movement_highlights.remove(self)
+        GameObject.unordered_collections["movement_highlight"].remove(self)

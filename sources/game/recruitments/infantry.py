@@ -1,9 +1,14 @@
-from game.recruitments.base import SoldierRecruitment
-from game.soldiers.infantry import Infantry
+from game.recruitments.base import (SoldierRecruitment, SoldierRecruitmentModel,
+                                    SoldierRecruitmentView)
+
+
+class InfantryRecruitmentModel(SoldierRecruitmentModel):
+    pass
+
+
+class InfantryRecruitmentView(SoldierRecruitmentView):
+    pass
 
 
 class InfantryRecruitment(SoldierRecruitment):
-
-    @property
-    def target(self) -> type[Infantry]:
-        return Infantry
+    pass

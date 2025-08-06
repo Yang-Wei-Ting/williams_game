@@ -1,14 +1,33 @@
-from game.displays.base import Display
-from game.states import DisplayState, GameState
+from collections.abc import Callable
+
+from game.base import GameObject
+from game.displays.base import Display, DisplayModel, DisplayView
+
+
+class CoinDisplayModel(DisplayModel):
+
+    def __init__(self, x: int, y: int) -> None:
+        super().__init__(x, y)
+        self.coin = 10
+
+    def get_data(self) -> dict:
+        data = {
+            **super().get_data(),
+            "coin": self.coin,
+        }
+        return data
+
+
+class CoinDisplayView(DisplayView):
+
+    def refresh(self, data: dict, event_handlers: dict[str, Callable]) -> None:
+        self._widgets["main"].configure(text=f"Coin: {data["coin"]:3d}")
 
 
 class CoinDisplay(Display):
 
     def _register(self) -> None:
-        DisplayState.coin_display = self
+        GameObject.singletons["coin_display"] = self
 
     def _unregister(self) -> None:
-        DisplayState.coin_display = None
-
-    def refresh_widgets(self) -> None:
-        self._main_widget.configure(text=f"Coin: {GameState.coin:3d}")
+        del GameObject.singletons["coin_display"]

@@ -1,9 +1,14 @@
-from game.recruitments.base import SoldierRecruitment
-from game.soldiers.archer import Archer
+from game.recruitments.base import (SoldierRecruitment, SoldierRecruitmentModel,
+                                    SoldierRecruitmentView)
+
+
+class ArcherRecruitmentModel(SoldierRecruitmentModel):
+    pass
+
+
+class ArcherRecruitmentView(SoldierRecruitmentView):
+    pass
 
 
 class ArcherRecruitment(SoldierRecruitment):
-
-    @property
-    def target(self) -> type[Archer]:
-        return Archer
+    pass

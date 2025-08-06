@@ -2,6 +2,7 @@ import tkinter as tk
 from glob import glob
 from pathlib import PurePath
 from tkinter import ttk
+from typing import Optional
 
 
 class Configuration:
@@ -33,10 +34,10 @@ class Configuration:
 
 class Environment:
 
-    SCREEN_HEIGHT = None
-    SCREEN_WIDTH = None
-    TCL_TK_VERSION = None
-    WINDOWING_SYSTEM = None
+    SCREEN_HEIGHT: Optional[int] = None
+    SCREEN_WIDTH: Optional[int] = None
+    TCL_TK_VERSION: Optional[str] = None
+    WINDOWING_SYSTEM: Optional[str] = None
 
 
 class Image:
@@ -48,6 +49,10 @@ class Image:
         """
         for path in glob("images/*"):
             setattr(cls, PurePath(path).stem, tk.PhotoImage(file=path))
+
+
+class ImproperlyConfigured(Exception):
+    pass
 
 
 class Style:
@@ -114,7 +119,7 @@ class Style:
         )
 
 
-def get_pixels(x: int, y: int, *, x_pixel_shift: float = 0.0, y_pixel_shift: float = 0.0) -> tuple:
+def get_pixels(x: int, y: int, *, x_pixel_shift: float = 0.0, y_pixel_shift: float = 0.0) -> tuple[float, float]:
     """
     Compute pixels from coordinates and custom pixel shifts.
     """
