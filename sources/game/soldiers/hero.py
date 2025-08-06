@@ -1,14 +1,14 @@
-from game.soldiers.base import Soldier
+from game.soldiers.base import Soldier, SoldierModel, SoldierView
 
 
-class Hero(Soldier):
+class HeroModel(SoldierModel):
 
     attack = 40.0
     attack_multipliers = {
-        "Archer": 1.5,
-        "Cavalry": 1.5,
-        "Hero": 1.5,
-        "Infantry": 1.5,
+        "ArcherModel": 1.5,
+        "CavalryModel": 1.5,
+        "HeroModel": 1.5,
+        "InfantryModel": 1.5,
     }
 
     health = 200.0
@@ -16,3 +16,11 @@ class Hero(Soldier):
     mobility = 3
 
     cost = 65535
+
+
+class HeroView(SoldierView):
+    pass
+
+
+class Hero(Soldier):
+    pass

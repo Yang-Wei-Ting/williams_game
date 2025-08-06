@@ -1,203 +1,63 @@
 import heapq
 import tkinter as tk
 from tkinter import ttk
+from typing import Optional
 
-from game.base import GameObject
-from game.highlights import AttackRangeHighlight, MovementHighlight
+from game.base import GameObject, GameObjectModel, GameObjectView
+from game.highlights import AttackRangeHighlight, AttackRangeHighlightModel, AttackRangeHighlightView, MovementHighlight, MovementHighlightModel, MovementHighlightView
 from game.miscellaneous import Configuration as C
 from game.miscellaneous import Environment as E
 from game.miscellaneous import Image, get_pixels, msleep
 from game.states import BuildingState, ControlState, DisplayState, GameState, HighlightState, SoldierState
 
 
-class Soldier(GameObject):
+class SoldierModel(GameObjectModel):
 
-    attack = 30.0
-    attack_multipliers = {}
-    attack_range = 1
+    _attack = 30.0
+    _attack_multipliers = {}
+    _attack_range = 1
 
-    defense = 0.15
-    health = 100.0
+    _defense = 0.15
+    _health = 100.0
 
-    mobility = 2
+    _mobility = 2
 
-    cost = 10
+    _cost = 10
 
-    def __init__(self, canvas: tk.Canvas, x: int, y: int, *, color: str, attach: bool = True) -> None:
-        self.color = color
+    def __init__(self, x: int, y: int, color: str, level: int = 1) -> None:
+        kwargs = {
+            "_color": color,
+            "_level": level,
+            "_experience": 0,
+            "_moved_this_turn": False,
+            "_attacked_this_turn": False,
+        }
+        super().__init__(x, y, **kwargs)
 
-        match self.color:
-            case C.BLUE:
-                self._friends = SoldierState.allied_soldiers
-                self._foes = SoldierState.enemy_soldiers
-            case C.RED:
-                self._friends = SoldierState.enemy_soldiers
-                self._foes = SoldierState.allied_soldiers
+    # GET
+    def get_data(self) -> dict:
+        data = {
+            **super().get_data(),
+            "color": self._color,
+            "level": self._level,
+            "experience": self._experience,
+            "attack": self._attack,
+            "attack_multipliers": self._attack_multipliers,
+            "attack_range": self._attack_range,
+            "defense": self._defense,
+            "health": self._health,
+            "mobility": self._mobility,
+            "cost": self._cost,
+            "moved_this_turn": self._moved_this_turn,
+            "attacked_this_turn": self._attacked_this_turn,
+        }
+        return data
 
-        self.level = 1
-        self.experience = 0
-        self.attacked_this_turn = False
-        self.moved_this_turn = False
-        super().__init__(canvas, x, y, attach=attach)
+    ################################################
+    def is_alive(self) -> bool:
+        return self._health > 0.0
 
-    def _create_widgets(self) -> None:
-        self._main_widget = ttk.Label(self._canvas)
-        self.refresh_widgets()
-        self.health_bar = ttk.Progressbar(
-            self._canvas,
-            length=C.HEALTH_BAR_LENGTH,
-            maximum=self.health,
-            mode="determinate",
-            orient=tk.HORIZONTAL,
-            style="Green_Red.Horizontal.TProgressbar",
-            value=self.health,
-        )
-
-    def _destroy_widgets(self) -> None:
-        self.health_bar.destroy()
-        del self.health_bar
-        super()._destroy_widgets()
-
-    def _register(self) -> None:
-        GameState.occupied_coordinates.add((self.x, self.y))
-        self._friends.add(self)
-
-    def _unregister(self) -> None:
-        GameState.occupied_coordinates.remove((self.x, self.y))
-        self._friends.remove(self)
-
-    def attach_widgets_to_canvas(self) -> None:
-        self._main_widget_id = self._canvas.create_window(
-            *get_pixels(self.x, self.y, y_pixel_shift=5.0),
-            window=self._main_widget,
-        )
-        self._health_bar_id = self._canvas.create_window(
-            *get_pixels(self.x, self.y, y_pixel_shift=-22.5),
-            window=self.health_bar,
-        )
-
-    def detach_widgets_from_canvas(self) -> None:
-        self._canvas.delete(self._health_bar_id)
-        del self._health_bar_id
-        super().detach_widgets_from_canvas()
-
-    def refresh_widgets(self) -> None:
-        if self.color == C.BLUE:
-            if self.attacked_this_turn and self.moved_this_turn:
-                cursor = "arrow"
-                hex_triplet = C.GRAY
-
-                self._main_widget.unbind("<ButtonPress-1>")
-            else:
-                cursor = "hand2"
-                hex_triplet = self.color
-
-                self._main_widget.bind("<ButtonPress-1>", self._handle_ally_press_event)
-        else:
-            cursor = "hand2"
-            hex_triplet = self.color
-
-            self._main_widget.bind("<ButtonPress-1>", self._handle_enemy_press_event)
-
-        color_name = C.COLOR_NAME_BY_HEX_TRIPLET[hex_triplet]
-        soldier_name = type(self).__name__.lower()
-
-        self._main_widget.configure(
-            cursor=cursor,
-            image=getattr(Image, f"{color_name}_{soldier_name}_{self.level}"),
-            style=f"Custom{color_name.capitalize()}.TButton",
-        )
-
-    def move_to(self, x: int, y: int) -> None:
-        """
-        Move self to the new coordinate.
-        """
-        GameState.occupied_coordinates.remove((self.x, self.y))
-        self.x = x
-        self.y = y
-        self._canvas.coords(self._main_widget_id, *get_pixels(self.x, self.y, y_pixel_shift=5.0))
-        self._canvas.coords(self._health_bar_id, *get_pixels(self.x, self.y, y_pixel_shift=-22.5))
-        GameState.occupied_coordinates.add((self.x, self.y))
-
-        self.moved_this_turn = True
-        self.refresh_widgets()
-
-    def assault(self, other) -> None:
-        """
-        Make self attack other.
-        """
-        other.health -= self._get_damage_output_against(other)
-        if other.health > 0.0:
-            other.health_bar["value"] = other.health
-        else:
-            other.detach_and_destroy_widgets()
-        self.experience += 1
-
-        self.attacked_this_turn = True
-        self.refresh_widgets()
-
-    def promote(self) -> None:
-        LEVEL_UP_EXPERIENCE_BY_LEVEL = {1: 4, 2: 8, 3: 16, 4: 32, 5: 65535}
-        while self.experience >= LEVEL_UP_EXPERIENCE_BY_LEVEL[self.level]:
-            self.experience -= LEVEL_UP_EXPERIENCE_BY_LEVEL[self.level]
-            self.level += 1
-            self.attack *= 1.2
-            self.defense += 0.05
-
-        self.refresh_widgets()
-
-    def restore_health_by(self, amount: float) -> None:
-        """
-        Restore self's health by amount (cannot exceed the maximum value).
-        """
-        self.health = min(self.health + amount, type(self).health)
-        self.health_bar["value"] = self.health
-
-    def hunt(self) -> None:
-        """
-        Identify the optimal rival soldier then move toward and potentially attack it.
-        """
-        MOVE_THEN_KILL = 1
-        MOVE_THEN_HIT = 2
-        MOVE = 3
-
-        heap = []
-        for i, other in enumerate(self._foes | BuildingState.critical_buildings):
-            path = self._get_approaching_path(other)
-            distance = other.get_distance_between(path[-1])
-            damage = self._get_damage_output_against(other)
-
-            if distance > self.attack_range:
-                action = MOVE
-                order_by = [distance, -damage, other.health]
-            elif damage < other.health:
-                action = MOVE_THEN_HIT
-                order_by = [-damage, other.health, distance]
-            else:
-                action = MOVE_THEN_KILL
-                order_by = [-damage, distance]
-
-            heapq.heappush(heap, (action, *order_by, i, path, other))
-
-        action, *_, path, other = heapq.heappop(heap)
-
-        highlights = [
-            MovementHighlight(self._canvas, *coordinate) for coordinate in path[:-1]
-        ]
-
-        self.move_to(*path[-1])
-        if action in {MOVE_THEN_HIT, MOVE_THEN_KILL}:
-            self.assault(other)
-            self.promote()
-
-        msleep(self._canvas.master, 200)
-
-        for highlight in highlights:
-            highlight.detach_and_destroy_widgets()
-
-        msleep(self._canvas.master, 200)
-
-    def _get_approaching_path(self, other) -> tuple:
+    def get_approaching_path(self, other: "SoldierModel | BuildingModel") -> tuple:
         """
         Use the A* pathfinding algorithm to compute the shortest path for self
         to move toward other until other is within self's attack range.
@@ -214,13 +74,13 @@ class Soldier(GameObject):
         while frontier:
             current = heapq.heappop(frontier)[1]
 
-            if other.get_distance_between(current) <= self.attack_range:
+            if other.get_distance_to(current) <= self._attack_range:
                 path = []
                 while current:
                     path.append(current)
                     current = parent_table[current]
                 path.reverse()
-                return tuple(path[:self.mobility + 1])
+                return tuple(path[:self._mobility + 1])
 
             new_cost = cost_table[current] + 1
             for dx, dy in {(1, 0), (0, 1), (-1, 0), (0, -1)}:
@@ -228,23 +88,212 @@ class Soldier(GameObject):
                 if (
                     0 <= x < C.HORIZONTAL_LAND_TILE_COUNT
                     and 0 <= y < C.VERTICAL_TILE_COUNT
-                    and (x, y) not in GameState.occupied_coordinates
+                    and (x, y) not in GameObjectModel.occupied_coordinates
                     and ((x, y) not in cost_table or new_cost < cost_table[(x, y)])
                 ):
-                    heapq.heappush(frontier, (new_cost + other.get_distance_between((x, y)), (x, y)))
+                    heapq.heappush(frontier, (new_cost + other.get_distance_to((x, y)), (x, y)))
                     cost_table[(x, y)] = new_cost
                     parent_table[(x, y)] = current
 
         # TODO: When other is surrounded by obstacles, self should try to approach it.
         return (start,)
 
-    def _get_damage_output_against(self, other) -> float:
-        return self.attack * self.attack_multipliers.get(type(other).__name__, 1.0) * (1.0 - other.defense)
+    #### other type hint
+    def get_damage_output_against(self, other) -> float:
+        multiplier = self._attack_multipliers.get(type(other).__name__, 1.0)
+        return self._attack * multiplier * (1.0 - other._defense)
+
+    # SET
+    def move_to(self, x: int, y: int) -> None:
+        super().move_to(x, y)
+        self._moved_this_turn = True
+
+    def restore_health_by(self, amount: float) -> None:
+        """
+        Restore self's health by amount (cannot exceed the maximum value).
+        """
+        self._health = min(self._health + amount, type(self)._health)
+
+    def _learn(self, experience: int = 1) -> None:
+        self._experience += experience
+
+        LEVEL_UP_EXPERIENCE_BY_LEVEL = {1: 4, 2: 8, 3: 16, 4: 32, 5: 65535}
+        while self._experience >= LEVEL_UP_EXPERIENCE_BY_LEVEL[self._level]:
+            self._experience -= LEVEL_UP_EXPERIENCE_BY_LEVEL[self._level]
+            self._level += 1
+            self._attack *= 1.2
+            self._defense += 0.05
+
+    ### other type hint
+    def assault(self, other) -> None:
+        """
+        Make self attack other.
+        """
+        other._health -= self.get_damage_output_against(other)
+        self._learn()
+        self._attacked_this_turn = True
+
+
+class SoldierView(GameObjectView):
+
+    def _create_widgets(self, data: dict) -> None:
+        self._widgets["main"] = ttk.Label(self._canvas)
+        self.refresh_main_appearance()
+        self._widgets["health_bar"] = ttk.Progressbar(
+            self._canvas,
+            length=C.HEALTH_BAR_LENGTH,
+            maximum=data["health"],
+            mode="determinate",
+            orient=tk.HORIZONTAL,
+            style="Green_Red.Horizontal.TProgressbar",
+            value=data["health"],
+        )
+
+    def attach_widgets(self, data: dict) -> None:
+        self._ids["main"] = self._canvas.create_window(
+            *get_pixels(data["x"], data["y"], y_pixel_shift=5.0),
+            window=self._widgets["main"],
+        )
+        self._ids["health_bar"] = self._canvas.create_window(
+            *get_pixels(data["x"], data["y"], y_pixel_shift=-22.5),
+            window=self._widgets["health_bar"],
+        )
+
+    def refresh_main_appearance(self, data: dict) -> None:
+        if data["color"] == C.BLUE and data["moved_this_turn"] and data["attacked_this_turn"]:
+            cursor = "arrow"
+            hex_triplet = C.GRAY
+        else:
+            cursor = "hand2"
+            hex_triplet = data["color"]
+
+        color_name = C.COLOR_NAME_BY_HEX_TRIPLET[hex_triplet]
+        soldier_name = type(self).__name__.removesuffix("View").lower()
+
+        self._widgets["main"].configure(
+            cursor=cursor,
+            image=getattr(Image, f"{color_name}_{soldier_name}_{data["level"]}"),
+            style=f"Custom{color_name.capitalize()}.TButton",
+        )
+
+    def refresh_health_bar_appearance(self, data: dict) -> None:
+        self._widgets["health_bar"]["value"] = data["health"]
+
+    def refresh_position(self, data: dict) -> None:
+        self._canvas.coords(
+            self._ids["main"],
+            *get_pixels(data["x"], data["y"], y_pixel_shift=5.0),
+        )
+        self._canvas.coords(
+            self._ids["health_bar"],
+            *get_pixels(data["x"], data["y"], y_pixel_shift=-22.5),
+        )
+
+    def bind_or_unbind_event_handlers(self, data: dict) -> None:
+        if data["color"] == C.BLUE:
+            if data["moved_this_turn"] and data["attacked_this_turn"]:
+                self._widgets["main"].unbind("<ButtonPress-1>")
+            else:
+                self._widgets["main"].bind("<ButtonPress-1>", self._controller._handle_ally_press_event)
+        else:
+            self._widgets["main"].bind("<ButtonPress-1>", self._controller._handle_enemy_press_event)
+
+
+class Soldier(GameObject):
+
+    def _register(self) -> None:
+        data = self.get_data_from_model()
+
+        match data["color"]:
+            case C.BLUE:
+                self._friends = SoldierState.allied_soldiers
+                self._foes = SoldierState.enemy_soldiers
+            case C.RED:
+                self._friends = SoldierState.enemy_soldiers
+                self._foes = SoldierState.allied_soldiers
+
+        self._friends.add(self)
+
+    def _unregister(self) -> None:
+        self._friends.remove(self)
+
+    def move_to(self, x: int, y: int) -> None:
+        self._model.move_to(x, y)
+        data = self.get_data_from_model()
+        self._view.refresh_position(data)
+        self._view.refresh_main_appearance(data)
+        self._view.bind_or_unbind_event_handlers(data)
+
+    ### other type hint
+    def assault(self, other) -> None:
+        self._model.assault(other._model)
+        data = self.get_data_from_model()
+        self._view.refresh_main_appearance(data)
+        self._view.bind_or_unbind_event_handlers(data)
+
+        if other._model.is_alive():
+            other._view.refresh_health_bar_appearance()
+        else:
+            other.destroy()
+
+    def restore_health_by(self, amount: float) -> None:
+        self._model.restore_health_by(amount)
+        self._view.refresh_health_bar_appearance()
+
+    def hunt(self) -> None:
+        """
+        Identify the optimal rival soldier then move toward and potentially attack it.
+        """
+        MOVE_THEN_KILL = 1
+        MOVE_THEN_HIT = 2
+        MOVE = 3
+
+        heap = []
+        for i, other in enumerate(self._foes | BuildingState.critical_buildings):
+            path = self._model.get_approaching_path(other._model)
+            distance = other._model.get_distance_to(path[-1])
+            damage = self._model.get_damage_output_against(other._model)
+
+            self_data = self.get_data_from_model()
+            other_data = other.get_data_from_model()
+
+            if distance > self_data["attack_range"]:
+                action = MOVE
+                order_by = [distance, -damage, other_data["health"]]
+            elif damage < other_data["health"]:
+                action = MOVE_THEN_HIT
+                order_by = [-damage, other_data["health"], distance]
+            else:
+                action = MOVE_THEN_KILL
+                order_by = [-damage, distance]
+
+            heapq.heappush(heap, (action, *order_by, i, path, other))
+
+        action, *_, path, other = heapq.heappop(heap)
+
+        self.move_to(*path[-1])
+        if action in {MOVE_THEN_HIT, MOVE_THEN_KILL}:
+            self.assault(other)
+
+        # Display trails
+        highlights = []
+        for coordinate in path[:-1]:
+            model = MovementHighlightModel(*coordinate)
+            view = MovementHighlightView(model=model, canvas=self._view._canvas)
+            controller = MovementHighlight(model=model, view=view)
+            highlights.append(controller)
+
+        msleep(self._view._canvas.master, 200)
+
+        for highlight in highlights:
+            highlight.destroy()
+
+        msleep(self._view._canvas.master, 200)
 
     def _handle_ally_press_event(self, event: tk.Event) -> None:
-        self._main_widget.grab_set()
-        self._main_widget.bind("<Motion>", self._handle_ally_drag_event)
-        self._main_widget.bind("<ButtonRelease-1>", self._handle_ally_release_event)
+        self._view._widgets["main"].grab_set()
+        self._view._widgets["main"].bind("<Motion>", self._handle_ally_drag_event)
+        self._view._widgets["main"].bind("<ButtonRelease-1>", self._handle_ally_release_event)
 
         self._pressed_x = event.x
         self._pressed_y = event.y
@@ -252,41 +301,49 @@ class Soldier(GameObject):
         # On X11, clean up highlights in case the mouse button was released outside the window.
         if E.WINDOWING_SYSTEM == "x11":
             if HighlightState.attack_range_highlight:
-                HighlightState.attack_range_highlight.detach_and_destroy_widgets()
+                HighlightState.attack_range_highlight.destroy()
 
             for highlight in list(HighlightState.movement_highlights):
-                highlight.detach_and_destroy_widgets()
+                highlight.destroy()
 
             GameState.pressed_game_object = None
             if DisplayState.stat_display:
-                DisplayState.stat_display.refresh_widgets()
+                DisplayState.stat_display._view.refresh_main_appearance()
+
+        data = self.get_data_from_model()
 
         self._attack_target_by_id = {}
-        if not self.attacked_this_turn:
-            AttackRangeHighlight(self._canvas, self.x, self.y, half_diagonal=self.attack_range)
+        if not data["attacked_this_turn"]:
+            model = AttackRangeHighlightModel(
+                x=data["x"],
+                y=data["y"],
+                half_diagonal=data["attack_range"],
+            )
+            view = AttackRangeHighlightView(model=model, canvas=self._view._canvas)
+            AttackRangeHighlight(model=model, view=view)
 
             covered_coordinates = set()
-            for offset in range(self.attack_range + 1):
+            for offset in range(data["attack_range"] + 1):
                 for i in range(-offset, offset + 1):
                     j = offset - abs(i)
-                    covered_coordinates.add((self.x + i, self.y + j))
+                    covered_coordinates.add((data["x"] + i, data["y"] + j))
                     if j != 0:
-                        covered_coordinates.add((self.x + i, self.y - j))
+                        covered_coordinates.add((data["x"] + i, data["y"] - j))
 
             for soldier in self._foes:
-                if (soldier.x, soldier.y) in covered_coordinates:
-                    self._attack_target_by_id[soldier._main_widget_id] = soldier
+                if (soldier._model.x, soldier._model.y) in covered_coordinates:
+                    self._attack_target_by_id[soldier.view._ids["main"]] = soldier
 
         self._movement_target_by_id = {}
-        if not self.moved_this_turn:
+        if not data["moved_this_turn"]:
             frontier = set()
-            frontier.add((self.x, self.y))
-            cost_table = {(self.x, self.y): 0}
+            frontier.add((data["x"], data["y"]))
+            cost_table = {(data["x"], data["y"]): 0}
 
             while frontier:
                 current = frontier.pop()
 
-                if cost_table[current] == self.mobility:
+                if cost_table[current] == data["mobility"]:
                     continue
 
                 for dx, dy in {(1, 0), (0, 1), (-1, 0), (0, -1)}:
@@ -294,23 +351,25 @@ class Soldier(GameObject):
                     if (
                         0 < x < C.HORIZONTAL_LAND_TILE_COUNT - 1
                         and 0 < y < C.VERTICAL_TILE_COUNT - 1
-                        and (x, y) not in GameState.occupied_coordinates
+                        and (x, y) not in GameObjectModel.occupied_coordinates
                         and (x, y) not in cost_table
                     ):
                         frontier.add((x, y))
                         cost_table[(x, y)] = cost_table[current] + 1
 
-                        highlight = MovementHighlight(self._canvas, x, y)
-                        self._movement_target_by_id[highlight._main_widget_id] = highlight
+                        model = MovementHighlightModel(x=x, y=y)
+                        view = MovementHighlightView(model=model, canvas=self._view._canvas)
+                        controller = MovementHighlight(model=model, view=view)
+                        self._movement_target_by_id[controller._view._ids["main"]] = controller
 
-        self._main_widget.lift()
-        self.health_bar.lift()
+        self._view._widgets["main"].lift()
+        self._view._widgets["health_bar"].lift()
         if ControlState.display_outcome_control:
-            ControlState.display_outcome_control._main_widget.lift()
+            ControlState.display_outcome_control._view._widgets["main"].lift()
 
         GameState.pressed_game_object = self
         if DisplayState.stat_display:
-            DisplayState.stat_display.refresh_widgets()
+            DisplayState.stat_display._view.refresh_main_appearance()
 
         for obj in GameState.selected_game_objects[::-1]:
             obj.handle_click_event()
@@ -319,23 +378,23 @@ class Soldier(GameObject):
         dx = event.x - self._pressed_x
         dy = event.y - self._pressed_y
 
-        self._main_widget.place(
-            x=self._main_widget.winfo_x() + dx,
-            y=self._main_widget.winfo_y() + dy,
+        self._view._widgets["main"].place(
+            x=self._view._widgets["main"].winfo_x() + dx,
+            y=self._view._widgets["main"].winfo_y() + dy,
         )
-        self.health_bar.place(
-            x=self.health_bar.winfo_x() + dx,
-            y=self.health_bar.winfo_y() + dy,
+        self._view._widgets["health_bar"].place(
+            x=self._view._widgets["health_bar"].winfo_x() + dx,
+            y=self._view._widgets["health_bar"].winfo_y() + dy,
         )
 
     def _handle_ally_release_event(self, event: tk.Event) -> None:
-        self._main_widget.grab_release()
-        self._main_widget.unbind("<Motion>")
-        self._main_widget.unbind("<ButtonRelease-1>")
+        self._view._widgets["main"].grab_release()
+        self._view._widgets["main"].unbind("<Motion>")
+        self._view._widgets["main"].unbind("<ButtonRelease-1>")
 
-        x = self._main_widget.winfo_x()
-        y = self._main_widget.winfo_y()
-        overlapping_ids = set(self._canvas.find_overlapping(x, y, x + 40, y + 40))
+        x = self._view._widgets["main"].winfo_x()
+        y = self._view._widgets["main"].winfo_y()
+        overlapping_ids = set(self._view._canvas.find_overlapping(x, y, x + 40, y + 40))
 
         if target_ids := overlapping_ids & set(self._attack_target_by_id):
             if len(target_ids) == 1:
@@ -347,35 +406,44 @@ class Soldier(GameObject):
             if len(target_ids) == 1:
                 target_id = target_ids.pop()
                 highlight = self._movement_target_by_id[target_id]
-                self.move_to(highlight.x, highlight.y)
+                self.move_to(highlight._model.x, highlight._model.y)
 
-        self.detach_widgets_from_canvas()
-        self.attach_widgets_to_canvas()
+        self._view.detach_widgets()
+        self._view.attach_widgets()
 
         if HighlightState.attack_range_highlight:
-            HighlightState.attack_range_highlight.detach_and_destroy_widgets()
+            HighlightState.attack_range_highlight.destroy()
 
         for highlight in list(HighlightState.movement_highlights):
-            highlight.detach_and_destroy_widgets()
+            highlight.destroy()
 
         GameState.pressed_game_object = None
         if DisplayState.stat_display:
-            DisplayState.stat_display.refresh_widgets()
+            DisplayState.stat_display._view.refresh_main_appearance()
 
     def _handle_enemy_press_event(self, event: tk.Event) -> None:
-        self._main_widget.grab_set()
-        self._main_widget.bind("<ButtonRelease-1>", self._handle_enemy_release_event)
+        self._view._widgets["main"].grab_set()
+        self._view._widgets["main"].bind("<ButtonRelease-1>", self._handle_enemy_release_event)
 
-        AttackRangeHighlight(self._canvas, self.x, self.y, half_diagonal=self.attack_range)
+        attack_range_highlight_model = AttackRangeHighlightModel(
+            x=self._model.x,
+            y=self._model.y,
+            half_diagonal=self._model.attack_range,
+        )
+        attack_range_highlight_view = AttackRangeHighlightView(
+            model=attack_range_highlight_model,
+            canvas=self._view._canvas,
+            attach=True,
+        )
 
         frontier = set()
-        frontier.add((self.x, self.y))
-        cost_table = {(self.x, self.y): 0}
+        frontier.add((self._model.x, self._model.y))
+        cost_table = {(self._model.x, self._model.y): 0}
 
         while frontier:
             current = frontier.pop()
 
-            if cost_table[current] == self.mobility:
+            if cost_table[current] == self._model.mobility:
                 continue
 
             for dx, dy in {(1, 0), (0, 1), (-1, 0), (0, -1)}:
@@ -389,30 +457,32 @@ class Soldier(GameObject):
                     frontier.add((x, y))
                     cost_table[(x, y)] = cost_table[current] + 1
 
-                    MovementHighlight(self._canvas, x, y)
+                    movement_highlight_model = MovementHighlightModel(x=x, y=y)
+                    movement_highlight_view = MovementHighlightView(canvas=self._view._canvas, attach=True)
+                    MovementHighlight(model=movement_highlight_model, view=movement_highlight_view)
 
-        self._main_widget.lift()
-        self.health_bar.lift()
+        self._view._widgets["main"].lift()
+        self._view._widgets["health_bar"].lift()
         if ControlState.display_outcome_control:
-            ControlState.display_outcome_control._main_widget.lift()
+            ControlState.display_outcome_control._view._widgets["main"].lift()
 
         GameState.pressed_game_object = self
         if DisplayState.stat_display:
-            DisplayState.stat_display.refresh_widgets()
+            DisplayState.stat_display._view.refresh_main_appearance()
 
         for obj in GameState.selected_game_objects[::-1]:
             obj.handle_click_event()
 
     def _handle_enemy_release_event(self, event: tk.Event) -> None:
-        self._main_widget.grab_release()
-        self._main_widget.unbind("<ButtonRelease-1>")
+        self._view._widgets["main"].grab_release()
+        self._view._widgets["main"].unbind("<ButtonRelease-1>")
 
         if HighlightState.attack_range_highlight:
-            HighlightState.attack_range_highlight.detach_and_destroy_widgets()
+            HighlightState.attack_range_highlight.destroy()
 
         for highlight in list(HighlightState.movement_highlights):
-            highlight.detach_and_destroy_widgets()
+            highlight.destroy()
 
         GameState.pressed_game_object = None
         if DisplayState.stat_display:
-            DisplayState.stat_display.refresh_widgets()
+            DisplayState.stat_display._view.refresh_main_appearance()

@@ -2,13 +2,13 @@ import tkinter as tk
 from abc import abstractmethod
 from tkinter import ttk
 
-from game.base import GameObject
+from game.base import GameObjectModel
 from game.miscellaneous import Configuration as C
 from game.miscellaneous import Image, get_pixels
 from game.states import GameState
 
 
-class Building(GameObject):
+class Building(GameObjectModel):
 
     defense = 0.4
     health = 400.0

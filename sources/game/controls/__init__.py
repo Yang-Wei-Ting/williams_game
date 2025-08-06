@@ -1,2 +1,2 @@
-from game.controls.display_outcome import DisplayOutcomeControl
-from game.controls.end_turn import EndTurnControl
+from game.controls.display_outcome import DisplayOutcomeControl, DisplayOutcomeControlModel, DisplayOutcomeControlView
+from game.controls.end_turn import EndTurnControl, EndTurnControlModel, EndTurnControlView

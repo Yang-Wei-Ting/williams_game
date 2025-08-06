@@ -1,12 +1,20 @@
-from game.soldiers.base import Soldier
+from game.soldiers.base import Soldier, SoldierModel, SoldierView
 
 
-class Cavalry(Soldier):
+class CavalryModel(SoldierModel):
 
     attack_multipliers = {
-        "Archer": 1.5,
-        "Hero": 0.7,
-        "Infantry": 0.7,
+        "ArcherModel": 1.5,
+        "HeroModel": 0.7,
+        "InfantryModel": 0.7,
     }
 
     mobility = 3
+
+
+class CavalryView(SoldierView):
+    pass
+
+
+class Cavalry(Soldier):
+    pass

@@ -5,8 +5,8 @@ from math import ceil
 from random import choice, sample
 from tkinter import ttk
 
-from game.base import GameObject
-from game.controls.display_outcome import DisplayOutcomeControl
+from game.base import GameObject, GameObjectModel, GameObjectView
+from game.controls.display_outcome import DisplayOutcomeControl, DisplayOutcomeControlModel, DisplayOutcomeControlView
 from game.miscellaneous import Configuration as C
 from game.miscellaneous import Environment as E
 from game.miscellaneous import msleep
@@ -18,7 +18,7 @@ from game.states import BuildingState, ControlState, DisplayState, GameState, So
 def block_user_input_during(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
-        overlay = tk.Toplevel(self._canvas.master)
+        overlay = tk.Toplevel(self._view._canvas.master)
         overlay.wm_geometry(f"{E.SCREEN_WIDTH}x{E.SCREEN_HEIGHT}+0+0")
 
         match E.WINDOWING_SYSTEM:
@@ -31,7 +31,7 @@ def block_user_input_during(func):
                 overlay.wm_attributes("-alpha", 0.01, "-topmost", 1)
 
                 # Wait until the overlay becomes transparent.
-                msleep(self._canvas.master, 20)
+                msleep(self._view._canvas.master, 20)
 
         value = func(self, *args, **kwargs)
 
@@ -41,87 +41,48 @@ def block_user_input_during(func):
     return wrapper
 
 
-class EndTurnControl(GameObject):
+class EndTurnControlModel(GameObjectModel):
 
-    def __init__(self, canvas: tk.Canvas, x: int, y: int, *, attach: bool = True) -> None:
+    def __init__(self, x: int, y: int) -> None:
         self._day_generator_iterator = self._day_generator_function()
         self._wave_generator_iterator = self._wave_generator_function()
-        super().__init__(canvas, x, y, attach=attach)
-
-    def _create_widgets(self) -> None:
-        self._main_widget = ttk.Button(
-            self._canvas,
-            command=self.handle_click_event,
-            cursor="hand2",
-            style="SmallText.Black_Burlywood4.TButton",
-            takefocus=False,
-            text="End turn",
-        )
-
-    def _register(self) -> None:
-        ControlState.end_turn_control = self
-
-    def _unregister(self) -> None:
-        ControlState.end_turn_control = None
-
-    @block_user_input_during
-    def handle_click_event(self) -> None:
-        for obj in GameState.selected_game_objects[::-1]:
-            obj.handle_click_event()
-
-        if SoldierState.enemy_soldiers:
-            for enemy in SoldierState.enemy_soldiers:
-                enemy.attacked_this_turn = False
-                enemy.moved_this_turn = False
-                enemy.refresh_widgets()
-
-            self._execute_computer_turn()
-        else:
-            next(self._day_generator_iterator)
-
-        for ally in SoldierState.allied_soldiers:
-            ally.attacked_this_turn = False
-            ally.moved_this_turn = False
-            ally.refresh_widgets()
-
-    def _execute_computer_turn(self) -> None:
-        if not SoldierState.allied_soldiers and not BuildingState.critical_buildings:
-            DisplayOutcomeControl(self._canvas, text="You have been defeated.")
-            return
-
-        for enemy in SoldierState.enemy_soldiers:
-            enemy.hunt()
-
-            if not SoldierState.allied_soldiers and not BuildingState.critical_buildings:
-                DisplayOutcomeControl(self._canvas, text="You have been defeated.")
-                break
+        super().__init__(x, y)
 
     def _day_generator_function(self) -> Iterator[None]:
         while True:
             GameState.day += 1
             if DisplayState.day_display:
-                DisplayState.day_display.refresh_widgets()
+                DisplayState.day_display._view.refresh_main_appearance()
             for ally in SoldierState.allied_soldiers:
                 ally.restore_health_by(10.0)
             yield
 
             GameState.day += 1
             if DisplayState.day_display:
-                DisplayState.day_display.refresh_widgets()
+                DisplayState.day_display._view.refresh_main_appearance()
             try:
                 next(self._wave_generator_iterator)
                 yield
             except StopIteration:
                 while True:
-                    DisplayOutcomeControl(self._canvas, text="Victory is yours!")
+                    display_outcome_control_model = DisplayOutcomeControlModel(text="Victory is yours!")
+                    display_outcome_control_view = DisplayOutcomeControlView(
+                        model=display_outcome_control_model,
+                        canvas=self._canvas,
+                        attach=True,
+                    )
+                    DisplayOutcomeControl(
+                        model=display_outcome_control_model,
+                        view=display_outcome_control_view,
+                    )
                     yield
 
             GameState.day += 1
             if DisplayState.day_display:
-                DisplayState.day_display.refresh_widgets()
+                DisplayState.day_display._view.refresh_main_appearance()
             GameState.coin += 8 + (GameState.wave * 2)
             if DisplayState.coin_display:
-                DisplayState.coin_display.refresh_widgets()
+                DisplayState.coin_display._view.refresh_main_appearance()
             for ally in SoldierState.allied_soldiers:
                 ally.restore_health_by(10.0)
             yield
@@ -152,6 +113,7 @@ class EndTurnControl(GameObject):
                 coordinates.extend(area)
             return sample(coordinates, n)
 
+        ######## TODO
         def sample_common_soldiers() -> Soldier:
             return choice([Archer, Cavalry, Infantry])
 
@@ -168,3 +130,77 @@ class EndTurnControl(GameObject):
             for x, y in sample_n_coordinates_from_m_areas(n, m):
                 sample_common_soldiers()(self._canvas, x, y, color=C.RED)
             yield
+
+
+class EndTurnControlView(GameObjectView):
+
+    def _create_widgets(self) -> None:
+        self._widgets["main"] = ttk.Button(
+            self._canvas,
+            cursor="hand2",
+            style="SmallText.Black_Burlywood4.TButton",
+            takefocus=False,
+            text="End turn",
+        )
+
+
+class EndTurnControl(GameObject):
+
+    def _bind_or_unbind_event_handlers(self) -> None:
+        self._view._widgets["main"].configure(command=self.handle_click_event)
+
+    def _register(self) -> None:
+        ControlState.end_turn_control = self
+
+    def _unregister(self) -> None:
+        ControlState.end_turn_control = None
+
+    @block_user_input_during
+    def handle_click_event(self) -> None:
+        for obj in GameState.selected_game_objects[::-1]:
+            obj.handle_click_event()
+
+        if SoldierState.enemy_soldiers:
+            for enemy in SoldierState.enemy_soldiers:
+                enemy._model.attacked_this_turn = False
+                enemy._model.moved_this_turn = False
+                enemy._view.refresh_main_appearance()
+
+            self._execute_computer_turn()
+        else:
+            next(self._model._day_generator_iterator)
+
+        for ally in SoldierState.allied_soldiers:
+            ally._model.attacked_this_turn = False
+            ally._model.moved_this_turn = False
+            ally._view.refresh_main_appearance()
+
+    def _execute_computer_turn(self) -> None:
+        if not SoldierState.allied_soldiers and not BuildingState.critical_buildings:
+            display_outcome_control_model = DisplayOutcomeControlModel(text="You have been defeated.")
+            display_outcome_control_view = DisplayOutcomeControlView(
+                model=display_outcome_control_model,
+                canvas=self._canvas,
+                attach=True,
+            )
+            DisplayOutcomeControl(
+                model=display_outcome_control_model,
+                view=display_outcome_control_view,
+            )
+            return
+
+        for enemy in SoldierState.enemy_soldiers:
+            enemy.hunt()
+
+            if not SoldierState.allied_soldiers and not BuildingState.critical_buildings:
+                display_outcome_control_model = DisplayOutcomeControlModel(text="You have been defeated.")
+                display_outcome_control_view = DisplayOutcomeControlView(
+                    model=display_outcome_control_model,
+                    canvas=self._canvas,
+                    attach=True,
+                )
+                DisplayOutcomeControl(
+                    model=display_outcome_control_model,
+                    view=display_outcome_control_view,
+                )
+                break

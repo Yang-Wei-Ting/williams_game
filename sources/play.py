@@ -8,12 +8,12 @@ import tkinter as tk
 from random import choices
 
 from game.buildings import Barrack
-from game.controls import EndTurnControl
-from game.displays import CoinDisplay, DayDisplay, StatDisplay
+from game.controls import EndTurnControl, EndTurnControlModel, EndTurnControlView
+from game.displays import CoinDisplay, CoinDisplayModel, CoinDisplayView, DayDisplay, DayDisplayModel, DayDisplayView, StatDisplay, StatDisplayModel, StatDisplayView
 from game.miscellaneous import Configuration as C
 from game.miscellaneous import Environment as E
 from game.miscellaneous import Image, Style, get_pixels
-from game.soldiers import Hero
+from game.soldiers import Hero, HeroModel, HeroView
 
 
 class Program:
@@ -41,7 +41,7 @@ class Program:
         self._create_displays()
         self._create_controls()
 
-        self._create_initial_buildings()
+        # self._create_initial_buildings()
         self._create_initial_allied_soldiers()
 
         self._window.mainloop()
@@ -81,27 +81,52 @@ class Program:
                 self._canvas.create_image(*get_pixels(x, y), image=Image.ocean)
 
     def _create_displays(self) -> None:
-        DayDisplay(
-            self._canvas,
-            C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
-            0,
+        day_display_model = DayDisplayModel(
+            x=C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
+            y=0,
         )
-        CoinDisplay(
-            self._canvas,
-            C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
-            1,
+        day_display_view = DayDisplayView(
+            model=day_display_model,
+            canvas=self._canvas,
+            attach=True,
         )
-        StatDisplay(
-            self._canvas,
-            C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
-            5,
+        DayDisplay(model=day_display_model, view=day_display_view)
+
+        coin_display_model = CoinDisplayModel(
+            x=C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
+            y=1,
         )
+        coin_display_view = CoinDisplayView(
+            model=coin_display_model,
+            canvas=self._canvas,
+            attach=True,
+        )
+        CoinDisplay(model=coin_display_model, view=coin_display_view)
+
+        stat_display_model = StatDisplayModel(
+            x=C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
+            y=5,
+        )
+        stat_display_view = StatDisplayView(
+            model=stat_display_model,
+            canvas=self._canvas,
+            attach=True,
+        )
+        StatDisplay(model=stat_display_model, view=stat_display_view)
 
     def _create_controls(self) -> None:
+        end_turn_control_model = EndTurnControlModel(
+            x=C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
+            y=C.VERTICAL_TILE_COUNT - 1,
+        )
+        end_turn_control_view = EndTurnControlView(
+            model=end_turn_control_model,
+            canvas=self._canvas,
+            attach=True,
+        )
         EndTurnControl(
-            self._canvas,
-            C.HORIZONTAL_LAND_TILE_COUNT + C.HORIZONTAL_SHORE_TILE_COUNT,
-            C.VERTICAL_TILE_COUNT - 1,
+            model=end_turn_control_model,
+            view=end_turn_control_view,
         )
 
     def _create_initial_buildings(self) -> None:
@@ -112,12 +137,13 @@ class Program:
         )
 
     def _create_initial_allied_soldiers(self) -> None:
-        Hero(
-            self._canvas,
-            C.HORIZONTAL_LAND_TILE_COUNT // 2,
-            C.VERTICAL_TILE_COUNT // 2 + 1,
+        hero_model = HeroModel(
+            x=C.HORIZONTAL_LAND_TILE_COUNT // 2,
+            y=C.VERTICAL_TILE_COUNT // 2 + 1,
             color=C.BLUE,
         )
+        hero_view = HeroView(model=hero_model, canvas=self._canvas, attach=True)
+        Hero(model=hero_model, view=hero_view)
 
 
 if __name__ == "__main__":
